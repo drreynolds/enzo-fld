@@ -151,7 +151,7 @@ lib%.so: $(MODULES) autogen dep enzo.o $(OBJS_LIB)
 
 # Inhibit removing any *.o files after compiling
 
-.PRECIOUS: %.o %.f
+.PRECIOUS: %.o
 
 .src.f:
 	@$(CPP) $(DEFINES) $(CPPFLAGS) $*.src > $*.f
@@ -160,7 +160,7 @@ lib%.so: $(MODULES) autogen dep enzo.o $(OBJS_LIB)
 	@rm -f $@
 	-@($(FC) -c -o $@ $(FFLAGS) $*.f) >& $(OUTPUT)
 	@(if [ -e $@ ]; then \
-             touch $*.f; \
+             rm -f $*.f; \
           else \
              echo; \
              echo "$(CPP) $(DEFINES) $(CPPFLAGS) $*.src > $*.f"; \

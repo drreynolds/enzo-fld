@@ -32,13 +32,10 @@ def check_for_hdf5():
 H5dir = check_for_hdf5()
 
 setup(name="enzo",
-      py_modules=['enzo'], 
-      ext_modules=[Extension("_enzo",
-                     ["enzo.i"],
-                     swig_opts=['-c++'],
+      ext_modules=[Extension("enzo_wrap",
+                     ["enzo_wrap.c"],
                      include_dirs=["../enzo/", numpy_include,
-                                   os.path.join(H5dir,"include"),
-                                   "/afs/slac/package/OpenMPI/1.2.5/amd64_linux26/include/"],
+                                   os.path.join(H5dir,"include")],
                      libraries=['enzo_p8_b8','hdf5'],
                      library_dirs=["../enzo/",
                                    os.path.join(H5dir,"lib")],
