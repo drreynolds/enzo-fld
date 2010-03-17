@@ -43,6 +43,7 @@ extern "C" void FORTRAN_NAME(copy3drt)(float *source, float *dest,
                                    int *sstart1, int *sstart2, int *sstart3,
                                    int *dstart1, int *dstart2, int *dststart3);
 
+MPI_Arg Return_MPI_Tag(int tag, int num1, int num2);
 int NonUnigridCommunicationTranspose(region *FromRegion, int NumberOfFromRegions,
 			   region *ToRegion, int NumberOfToRegions,
 			   int TransposeOrder);
@@ -203,13 +204,15 @@ int NonUnigridCommunicationTranspose(region *FromRegion, int NumberOfFromRegions
  
 #ifdef USE_MPI
  
+      MPI_Request RequestHandle; 
       MPI_Status status;
       MPI_Datatype DataType = (sizeof(float) == 4) ? MPI_FLOAT : MPI_DOUBLE;
       MPI_Arg Count;
       MPI_Arg RecvCount;
       MPI_Arg Source;
       MPI_Arg Dest;
- 
+      MPI_Arg SendTag, RecvTag;
+
       int ToProc = (MyProcessorNumber + n) % NumberOfProcessors;
       int FromProc = (MyProcessorNumber - n + NumberOfProcessors) %
 	NumberOfProcessors;
@@ -225,15 +228,23 @@ int NonUnigridCommunicationTranspose(region *FromRegion, int NumberOfFromRegions
       RecvCount = ReceiveSize;
       Source = FromProc;
       Dest = ToProc;
+      RecvTag = Return_MPI_Tag(MPI_TRANSPOSE_TAG, RecvCount, Source);
+      SendTag = Return_MPI_Tag(MPI_TRANSPOSE_TAG, Count, Dest);
        
-      if (MPI_Sendrecv((void*) SendBuffer, Count, DataType, Dest,
-	       MPI_TRANSPOSE_TAG, (void*) ReceiveBuffer, RecvCount,
-	       DataType, Source, MPI_TRANSPOSE_TAG, MPI_COMM_WORLD,
-	       &status) != MPI_SUCCESS) {
-	fprintf(stderr, "Proc %"ISYM" MPI_Sendrecv error %"ISYM"\n", MyProcessorNumber,
-		status.MPI_ERROR);
-	ENZO_FAIL("");
-      }
+//      if (MPI_Sendrecv((void*) SendBuffer, Count, DataType, Dest,
+//	       MPI_TRANSPOSE_TAG, (void*) ReceiveBuffer, RecvCount,
+//	       DataType, Source, MPI_TRANSPOSE_TAG, MPI_COMM_WORLD,
+//	       &status) != MPI_SUCCESS) {
+//	fprintf(stderr, "Proc %"ISYM" MPI_Sendrecv error %"ISYM"\n", MyProcessorNumber,
+//		status.MPI_ERROR);
+//	ENZO_FAIL("");
+//      }
+
+      MPI_Irecv((void*) ReceiveBuffer, RecvCount, DataType, Source, 
+		RecvTag, MPI_COMM_WORLD, &RequestHandle);
+      MPI_Send((void*) SendBuffer, Count, DataType, Dest, SendTag,
+	       MPI_COMM_WORLD);
+      MPI_Wait(&RequestHandle, &status);
  
 #ifdef MPI_INSTRUMENTATION
       endtime = MPI_Wtime();
@@ -812,6 +823,7 @@ int OptimizedUnigridCommunicationTranspose(
       MPI_Arg RecvCount;
       MPI_Arg Source;
       MPI_Arg Dest;
+      MPI_Arg RecvTag, SendTag;
  
       int ToProc = (MyProcessorNumber + n) % NumberOfProcessors;
       int FromProc = (MyProcessorNumber - n + NumberOfProcessors) %
@@ -828,6 +840,8 @@ int OptimizedUnigridCommunicationTranspose(
       RecvCount = ReceiveSize;
       Source = FromProc;
       Dest = ToProc;
+      RecvTag = Return_MPI_Tag(MPI_TRANSPOSE_TAG, RecvCount, Source);
+      SendTag = Return_MPI_Tag(MPI_TRANSPOSE_TAG, Count, Dest);
 
 /* 
       if (MPI_Sendrecv((void*) SendBuffer, Count, DataType, Dest,
