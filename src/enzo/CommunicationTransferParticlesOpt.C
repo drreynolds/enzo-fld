@@ -41,6 +41,8 @@ int Enzo_Dims_create(int nnodes, int ndims, int *dims);
 int CommunicationShareParticles(int *NumberToMove, particle_data* &SendList,
 				int &NumberOfReceives,
 				particle_data* &SharedList);
+int search_lower_bound(int *arr, int value, int low, int high, 
+		       int total);
 
 #define NO_DEBUG_CTP
 #define KEEP_PARTICLES_LOCAL
@@ -62,7 +64,8 @@ int CommunicationTransferParticles(grid *GridPointer[], int NumberOfGrids,
   int *GridMap = new int[NumberOfGrids];
   int *StartIndex[MAX_DIMENSION];
   int Layout[MAX_DIMENSION], LayoutTemp[MAX_DIMENSION];
-  int Rank, grid_num, CenterIndex, width, bin;
+  int Rank, grid_num, CenterIndex, bin;
+  int *pbin;
   int GridPosition[MAX_DIMENSION], Dims[MAX_DIMENSION];
   FLOAT Left[MAX_DIMENSION], Right[MAX_DIMENSION];
 
@@ -86,7 +89,7 @@ int CommunicationTransferParticles(grid *GridPointer[], int NumberOfGrids,
 
   for (dim = 0; dim < Rank; dim++) {
 
-    StartIndex[dim] = new int[Layout[dim]];
+    StartIndex[dim] = new int[Layout[dim]+1];
     ExactDims = float(TopGridDims[dim]) / float(Layout[dim]);
     ExactCount = 0.0;
     DisplacementCount = 0;
@@ -99,41 +102,35 @@ int CommunicationTransferParticles(grid *GridPointer[], int NumberOfGrids,
 	ThisCount = nint(ExactCount) - DisplacementCount;
       StartIndex[dim][i] = DisplacementCount;
       DisplacementCount += ThisCount;
-    } // ENDFOR i    
+    } // ENDFOR i
+
+    StartIndex[dim][Layout[dim]] = TopGridDims[dim];
 
   } // ENDFOR dim
 
   for (grid = 0; grid < NumberOfGrids; grid++) {
     GridPointer[grid]->ReturnGridInfo(&Rank, Dims, Left, Right);
     for (dim = 0; dim < Rank; dim++) {
-      CenterIndex = 
-	int(TopGridDims[dim] *
-	    (0.5*(Right[dim]+Left[dim]) - DomainLeftEdge[dim]) /
-	    (DomainRightEdge[dim] - DomainLeftEdge[dim]));
 
-      // Binary search (for Layout[dim] > 3) in the StartIndex to see
-      // where this grid lies in the partitions
-      width = bin = Layout[dim]/2;
-      if (width <= 1) {
-	for (bin = 1; bin < Layout[dim]; bin++)
-	  if (CenterIndex < StartIndex[dim][bin])
-	    break;
-	bin = min(bin-1, Layout[dim]-1);
+      if (Layout[dim] == 1) {
+	GridPosition[dim] = 0;
       } else {
-	while (width > 1) {
-	  width >>= 1;
-	  if (CenterIndex > StartIndex[dim][bin])
-	    bin += width;
-	  else if (CenterIndex < StartIndex[dim][bin])
-	    bin -= width;
-	  else
-	    break;
-	} // ENDWHILE
-      } // ENDELSE (width == 1)
 
-      GridPosition[dim] = bin;
+	CenterIndex = 
+	  int(TopGridDims[dim] *
+	      (0.5*(Right[dim]+Left[dim]) - DomainLeftEdge[dim]) /
+	      (DomainRightEdge[dim] - DomainLeftEdge[dim]));
+      
+	GridPosition[dim] = 
+	  search_lower_bound(StartIndex[dim], CenterIndex, 0, Layout[dim],
+			     Layout[dim]);
+
+      } // ENDELSE
 
     } // ENDFOR dim
+//    if (debug)
+//      printf("grid %d: GPos = %d %d %d\n", grid, GridPosition[0],
+//	     GridPosition[1], GridPosition[2]);
     grid_num = GridPosition[0] + 
       Layout[0] * (GridPosition[1] + Layout[1]*GridPosition[2]);
     GridMap[grid_num] = grid;

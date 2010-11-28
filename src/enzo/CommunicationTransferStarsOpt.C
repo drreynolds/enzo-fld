@@ -39,6 +39,8 @@ void my_exit(int status);
  
 Eint32 compare_star_grid(const void *a, const void *b);
 int Enzo_Dims_create(int nnodes, int ndims, int *dims);
+int search_lower_bound(int *arr, int value, int low, int high, 
+		       int total);
 
 // Remove define.  This method will always be used.
 //#define KEEP_PARTICLES_LOCAL
@@ -49,7 +51,7 @@ int CommunicationTransferStars(grid *GridPointer[], int NumberOfGrids,
 
   if (NumberOfGrids == 1)
     return SUCCESS;
- 
+
   int i, j, jstart, jend, dim, grid, proc, DisplacementCount, ThisCount;
   float ExactDims, ExactCount;
 
@@ -60,13 +62,15 @@ int CommunicationTransferStars(grid *GridPointer[], int NumberOfGrids,
   int *GridMap = new int[NumberOfGrids];
   int *StartIndex[MAX_DIMENSION];
   int Layout[MAX_DIMENSION], LayoutTemp[MAX_DIMENSION];
-  int Rank, grid_num, width, bin, CenterIndex;
+  int Rank, grid_num, bin, CenterIndex;
+  int *pbin;
   int GridPosition[MAX_DIMENSION], Dims[MAX_DIMENSION];
   FLOAT Left[MAX_DIMENSION], Right[MAX_DIMENSION];
 
   for (dim = 0; dim < MAX_DIMENSION; dim++) {
     Layout[dim] = 0;
     GridPosition[dim] = 0;
+    StartIndex[dim] = NULL;
   }
 
   GridPointer[0]->ReturnGridInfo(&Rank, Dims, Left, Right); // need rank
@@ -83,7 +87,7 @@ int CommunicationTransferStars(grid *GridPointer[], int NumberOfGrids,
 
   for (dim = 0; dim < Rank; dim++) {
 
-    StartIndex[dim] = new int[Layout[dim]];
+    StartIndex[dim] = new int[Layout[dim]+1];
     ExactDims = float(TopGridDims[dim]) / float(Layout[dim]);
     ExactCount = 0.0;
     DisplacementCount = 0;
@@ -98,37 +102,28 @@ int CommunicationTransferStars(grid *GridPointer[], int NumberOfGrids,
       DisplacementCount += ThisCount;
     } // ENDFOR i    
 
+    StartIndex[dim][Layout[dim]] = TopGridDims[dim];
+
   } // ENDFOR dim
 
   for (grid = 0; grid < NumberOfGrids; grid++) {
     GridPointer[grid]->ReturnGridInfo(&Rank, Dims, Left, Right);
     for (dim = 0; dim < Rank; dim++) {
-      CenterIndex = 
-	int(TopGridDims[dim] *
-	    (0.5*(Right[dim]+Left[dim]) - DomainLeftEdge[dim]) /
-	    (DomainRightEdge[dim] - DomainLeftEdge[dim]));
 
-      // Binary search (for Layout[dim] > 3) in the StartIndex to see
-      // where this grid lies in the partitions
-      width = bin = Layout[dim]/2;
-      if (width <= 1) {
-	for (bin = 1; bin < Layout[dim]; bin++)
-	  if (CenterIndex < StartIndex[dim][bin])
-	    break;
-	bin = min(bin-1, Layout[dim]-1);
+      if (Layout[dim] == 1) {
+	GridPosition[dim] = 0;
       } else {
-	while (width > 1) {
-	  width >>= 1;
-	  if (CenterIndex > StartIndex[dim][bin])
-	    bin += width;
-	  else if (CenterIndex < StartIndex[dim][bin])
-	    bin -= width;
-	  else
-	    break;
-	} // ENDWHILE
-      } // ENDELSE (width == 1)
 
-      GridPosition[dim] = bin;
+	CenterIndex = 
+	  int(TopGridDims[dim] *
+	      (0.5*(Right[dim]+Left[dim]) - DomainLeftEdge[dim]) /
+	      (DomainRightEdge[dim] - DomainLeftEdge[dim]));
+
+	GridPosition[dim] = 
+	  search_lower_bound(StartIndex[dim], CenterIndex, 0, Layout[dim],
+			     Layout[dim]);
+
+      } // ENDELSE
 
     } // ENDFOR dim
     grid_num = GridPosition[0] + 
@@ -220,12 +215,14 @@ int CommunicationTransferStars(grid *GridPointer[], int NumberOfGrids,
   delete [] SharedList;
   delete [] NumberToMove;
   delete [] GridMap;
+  for (dim = 0; dim < Rank; dim++)
+    delete [] StartIndex[dim];
 
   CommunicationSumValues(&TotalNumberToMove, 1);
   if (debug)
     printf("CommunicationTransferStars: moved = %"ISYM"\n",
   	   TotalNumberToMove);
- 
+
   return SUCCESS;
 }
 

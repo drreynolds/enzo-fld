@@ -32,6 +32,7 @@
 #define MAX_COLUMN_DENSITY 1e25
 #define MIN_TAU_IFRONT 0.1
 #define TAU_DELETE_PHOTON 10.0
+#define GEO_CORRECTION
 
 int SplitPhotonPackage(PhotonPackageEntry *PP);
 FLOAT FindCrossSection(int type, float energy);
@@ -44,8 +45,8 @@ int grid::WalkPhotonPackage(PhotonPackageEntry **PP,
 			    int kphHINum, int gammaNum, int kphHeINum, 
 			    int kphHeIINum, 
 			    int kdissH2INum, int RPresNum1, int RPresNum2, 
-			    int RPresNum3, int &DeleteMe, int &PauseMe, 
-			    int &DeltaLevel, float LightCrossingTime,
+			    int RPresNum3, int RaySegNum, int &DeleteMe, 
+			    int &PauseMe, int &DeltaLevel, float LightCrossingTime,
 			    float DensityUnits, float TemperatureUnits,
 			    float VelocityUnits, float LengthUnits,
 			    float TimeUnits) {
@@ -167,7 +168,7 @@ int grid::WalkPhotonPackage(PhotonPackageEntry **PP,
 
   cindex = GRIDINDEX_NOGHOST(g[0],g[1],g[2]);
   if (SubgridMarker[cindex] != this) {
-    FindPhotonNewGrid(cindex, r, *PP, *MoveToGrid,
+    FindPhotonNewGrid(cindex, r, u, *PP, *MoveToGrid,
 		      DeltaLevel, DomainWidth, DeleteMe, 
 		      ParentGrid);
     return SUCCESS;
@@ -326,7 +327,7 @@ int grid::WalkPhotonPackage(PhotonPackageEntry **PP,
        DeltaLevel, and DeleteMe, and exit the loop. */
 
     if (SubgridMarker[cindex] != this) {
-      FindPhotonNewGrid(cindex, r, *PP, *MoveToGrid,
+      FindPhotonNewGrid(cindex, r, u, *PP, *MoveToGrid,
 			DeltaLevel, DomainWidth, DeleteMe, 
 			ParentGrid);
       break;
@@ -445,6 +446,7 @@ int grid::WalkPhotonPackage(PhotonPackageEntry **PP,
     /* Geometric correction factor because the ray's solid angle could
        not completely cover the cell */
 
+#ifdef GEO_CORRECTION
     midpoint = oldr + 0.5f*ddr - PFLOAT_EPSILON;
     for (dim = 0; dim < 3; dim++)
       m[dim] = fabs(s[dim] + midpoint * u[dim] - (ce[dim] + dxhalf));
@@ -453,6 +455,9 @@ int grid::WalkPhotonPackage(PhotonPackageEntry **PP,
     sangle_inv = 1.0 / (dtheta*radius);
     slice_factor = min(0.5f + (dxhalf-nearest_edge) * sangle_inv, 1.0f);
     slice_factor2 = slice_factor * slice_factor;
+#else
+    slice_factor2 = 1.0;
+#endif
 
     // Adjust length and energy due to cosmological expansion
     // assumes that da/a=dl/l=2/3 dt/t which is strictly only true for OmegaM=1
@@ -734,7 +739,8 @@ int grid::WalkPhotonPackage(PhotonPackageEntry **PP,
     (*PP)->Photons     -= dP;
     (*PP)->Radius      += ddr;
 
-    //BaryonField[kphHeIINum][index] += 1;
+    if (RadiativeTransferLoadBalance)
+      BaryonField[RaySegNum][index] += 1.0;
 
     // return in case we're pausing to merge
     if (PauseMe)

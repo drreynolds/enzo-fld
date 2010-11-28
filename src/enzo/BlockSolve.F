@@ -1,3 +1,4 @@
+#include "fortran.def"
 c=======================================================================
 c  Copyright 2006 Daniel R. Reynolds
 c  Copyright 2006 Laboratory for Computational Astrophysics
@@ -25,7 +26,6 @@ c     xvec       - solution NxM matrix
 c     ier        - integer return flag (0=>failure, 1=>success)
 c
 c=======================================================================
-#include "fortran.def"
       implicit none
 c
 c  argument declarations
@@ -79,7 +79,6 @@ c
 c
       SUBROUTINE UGEMM ( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB,
      $                   BETA, C, LDC )
-#include "fortran.def"
 *     .. Scalar Arguments ..
       CHARACTER*1        TRANSA, TRANSB
       INTEGER            M, N, K, LDA, LDB, LDC
@@ -208,12 +207,11 @@ c
 *     Sven Hammarling, Numerical Algorithms Group Ltd.
 *
 *
-#include "fortran.def"
 *     .. External Functions ..
       LOGICAL            LSAME
       EXTERNAL           LSAME
 *     .. External Subroutines ..
-      EXTERNAL           XERBLA
+      EXTERNAL           E_XERBLA
 *     .. Intrinsic Functions ..
       INTRINSIC          MAX
 *     .. Local Scalars ..
@@ -270,7 +268,7 @@ c
          INFO = 13
       END IF
       IF( INFO.NE.0 )THEN
-         CALL XERBLA( 'UGEMM ', INFO )
+         CALL E_XERBLA( 'UGEMM ', INFO )
          RETURN
       END IF
 *
@@ -397,7 +395,6 @@ c=======================================================================
 c
       SUBROUTINE UGEMV ( TRANS, M, N, ALPHA, A, LDA, X, INCX,
      $                   BETA, Y, INCY )
-#include "fortran.def"
 *     .. Scalar Arguments ..
       REALSUB            ALPHA, BETA
       INTEGER            INCX, INCY, LDA, M, N
@@ -497,7 +494,6 @@ c
 *     Richard Hanson, Sandia National Labs.
 *
 *
-#include "fortran.def"
 *     .. Parameters ..
       REALSUB            ONE         , ZERO
       PARAMETER        ( ONE = 1.0D+0, ZERO = 0.0D+0 )
@@ -508,7 +504,7 @@ c
       LOGICAL            LSAME
       EXTERNAL           LSAME
 *     .. External Subroutines ..
-      EXTERNAL           XERBLA
+      EXTERNAL           E_XERBLA
 *     .. Intrinsic Functions ..
       INTRINSIC          MAX
 *     ..
@@ -533,7 +529,7 @@ c
          INFO = 11
       END IF
       IF( INFO.NE.0 )THEN
-         CALL XERBLA( 'UGEMV ', INFO )
+         CALL E_XERBLA( 'UGEMV ', INFO )
          RETURN
       END IF
 *
@@ -662,7 +658,6 @@ c
 c=======================================================================
 c
       SUBROUTINE UGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-#include "fortran.def"
 *     .. Scalar Arguments ..
       REALSUB            ALPHA
       INTEGER            INCX, INCY, LDA, M, N
@@ -740,7 +735,6 @@ c
 *     Richard Hanson, Sandia National Labs.
 *
 *
-#include "fortran.def"
 *     .. Parameters ..
       REALSUB            ZERO
       PARAMETER        ( ZERO = 0.0D+0 )
@@ -748,7 +742,7 @@ c
       REALSUB            TEMP
       INTEGER            I, INFO, IX, J, JY, KX
 *     .. External Subroutines ..
-      EXTERNAL           XERBLA
+      EXTERNAL           E_XERBLA
 *     .. Intrinsic Functions ..
       INTRINSIC          MAX
 *     ..
@@ -769,7 +763,7 @@ c
          INFO = 9
       END IF
       IF( INFO.NE.0 )THEN
-         CALL XERBLA( 'UGER  ', INFO )
+         CALL E_XERBLA( 'UGER  ', INFO )
          RETURN
       END IF
 *
@@ -830,7 +824,6 @@ c
 *     Courant Institute, Argonne National Lab, and Rice University
 *     June 30, 1992
 *
-#include "fortran.def"
 *     .. Scalar Arguments ..
       INTEGER            INFO, LDA, M, N
 *     ..
@@ -884,7 +877,6 @@ c
 *
 *  =====================================================================
 *
-#include "fortran.def"
 *     .. Parameters ..
       REALSUB            ONE, ZERO
       PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
@@ -893,11 +885,11 @@ c
       INTEGER            J, JP
 *     ..
 *     .. External Functions ..
-      INTEGER            IDAMAX
-      EXTERNAL           IDAMAX
+      INTEGER            e_idamax
+      EXTERNAL           e_idamax
 *     ..
 *     .. External Subroutines ..
-      EXTERNAL           UGER, USCAL, USWAP, XERBLA
+      EXTERNAL           UGER, USCAL, USWAP, E_XERBLA
 *     ..
 *     .. Intrinsic Functions ..
       INTRINSIC          MAX, MIN
@@ -915,7 +907,7 @@ c
          INFO = -4
       END IF
       IF( INFO.NE.0 ) THEN
-         CALL XERBLA( 'UGETF2', -INFO )
+         CALL E_XERBLA( 'UGETF2', -INFO )
          RETURN
       END IF
 *
@@ -928,7 +920,7 @@ c
 *
 *        Find pivot and test for singularity.
 *
-         JP = J - 1 + IDAMAX( M-J+1, A( J, J ), 1 )
+         JP = J - 1 + e_idamax( M-J+1, A( J, J ), 1 )
          IPIV( J ) = JP
          IF( A( JP, J ).NE.ZERO ) THEN
 *
@@ -970,7 +962,6 @@ c
 *     Courant Institute, Argonne National Lab, and Rice University
 *     March 31, 1993
 *
-#include "fortran.def"
 *     .. Scalar Arguments ..
       INTEGER            INFO, LDA, M, N
 *     ..
@@ -1024,7 +1015,6 @@ c
 *
 *  =====================================================================
 *
-#include "fortran.def"
 *     .. Parameters ..
       REALSUB            ONE
       PARAMETER          ( ONE = 1.0D+0 )
@@ -1033,7 +1023,7 @@ c
       INTEGER            I, IINFO, J, JB, NB
 *     ..
 *     .. External Subroutines ..
-      EXTERNAL           UGEMM, UGETF2, ULASWP, UTRSM, XERBLA
+      EXTERNAL           UGEMM, UGETF2, ULASWP, UTRSM, E_XERBLA
 *     ..
 *     .. External Functions ..
       INTEGER            ILAENV
@@ -1055,7 +1045,7 @@ c
          INFO = -4
       END IF
       IF( INFO.NE.0 ) THEN
-         CALL XERBLA( 'UGETRF', -INFO )
+         CALL E_XERBLA( 'UGETRF', -INFO )
          RETURN
       END IF
 *
@@ -1135,7 +1125,6 @@ c
 *     Courant Institute, Argonne National Lab, and Rice University
 *     March 31, 1993
 *
-#include "fortran.def"
 *     .. Scalar Arguments ..
       CHARACTER          TRANS
       INTEGER            INFO, LDA, LDB, N, NRHS
@@ -1193,7 +1182,6 @@ c
 *
 *  =====================================================================
 *
-#include "fortran.def"
 *     .. Parameters ..
       REALSUB            ONE
       PARAMETER          ( ONE = 1.0D+0 )
@@ -1206,7 +1194,7 @@ c
       EXTERNAL           LSAME
 *     ..
 *     .. External Subroutines ..
-      EXTERNAL           ULASWP, UTRSM, XERBLA
+      EXTERNAL           ULASWP, UTRSM, E_XERBLA
 *     ..
 *     .. Intrinsic Functions ..
       INTRINSIC          MAX
@@ -1230,7 +1218,7 @@ c
          INFO = -8
       END IF
       IF( INFO.NE.0 ) THEN
-         CALL XERBLA( 'UGETRS', -INFO )
+         CALL E_XERBLA( 'UGETRS', -INFO )
          RETURN
       END IF
 *
@@ -1290,7 +1278,6 @@ c
 *     Courant Institute, Argonne National Lab, and Rice University
 *     June 30, 1999
 *
-#include "fortran.def"
 *     .. Scalar Arguments ..
       INTEGER            INCX, K1, K2, LDA, N
 *     ..
@@ -1344,7 +1331,6 @@ c
 *
 * =====================================================================
 *
-#include "fortran.def"
 *     .. Local Scalars ..
       INTEGER            I, I1, I2, INC, IP, IX, IX0, J, K, N32
       REALSUB            TEMP
@@ -1414,7 +1400,6 @@ c     interchanges two vectors.
 c     uses unrolled loops for increments equal one.
 c     jack dongarra, linpack, 3/11/78.
 c     modified 12/3/93, array(1) declarations changed to array(*)
-#include "fortran.def"
 c
       REALSUB dx(*),dy(*),dtemp
       integer i,incx,incy,ix,iy,m,mp1,n
@@ -1476,7 +1461,6 @@ c     jack dongarra, linpack, 3/11/78.
 c     modified 3/93 to return if incx .le. 0.
 c     modified 12/3/93, array(1) declarations changed to array(*)
 c
-#include "fortran.def"
       REALSUB da,dx(*)
       integer i,incx,m,mp1,n,nincx
 c
@@ -1517,7 +1501,6 @@ c=======================================================================
 c
       SUBROUTINE UTRSM ( SIDE, UPLO, TRANSA, DIAG, M, N, ALPHA, A, LDA,
      $                   B, LDB )
-#include "fortran.def"
 *     .. Scalar Arguments ..
       CHARACTER*1        SIDE, UPLO, TRANSA, DIAG
       INTEGER            M, N, LDA, LDB
@@ -1645,12 +1628,11 @@ c
 *     Sven Hammarling, Numerical Algorithms Group Ltd.
 *
 *
-#include "fortran.def"
 *     .. External Functions ..
       LOGICAL            LSAME
       EXTERNAL           LSAME
 *     .. External Subroutines ..
-      EXTERNAL           XERBLA
+      EXTERNAL           E_XERBLA
 *     .. Intrinsic Functions ..
       INTRINSIC          MAX
 *     .. Local Scalars ..
@@ -1698,7 +1680,7 @@ c
          INFO = 11
       END IF
       IF( INFO.NE.0 )THEN
-         CALL XERBLA( 'UTRSM ', INFO )
+         CALL E_XERBLA( 'UTRSM ', INFO )
          RETURN
       END IF
 *
@@ -1898,20 +1880,19 @@ c
 c
 c=======================================================================
 c
-      integer function idamax(n,dx,incx)
+      integer function e_idamax(n,dx,incx)
 c
 c     finds the index of element having max. absolute value.
 c     jack dongarra, linpack, 3/11/78.
 c     modified 3/93 to return if incx .le. 0.
 c     modified 12/3/93, array(1) declarations changed to array(*)
 c
-#include "fortran.def"
       REALSUB dx(*),dmax
       integer i,incx,ix,n
 c
-      idamax = 0
+      e_idamax = 0
       if( n.lt.1 .or. incx.le.0 ) return
-      idamax = 1
+      e_idamax = 1
       if(n.eq.1)return
       if(incx.eq.1)go to 20
 c
@@ -1922,7 +1903,7 @@ c
       ix = ix + incx
       do 10 i = 2,n
          if(abs(dx(ix)).le.dmax) go to 5
-         idamax = i
+         e_idamax = i
          dmax = abs(dx(ix))
     5    ix = ix + incx
    10 continue
@@ -1933,7 +1914,7 @@ c
    20 dmax = abs(dx(1))
       do 30 i = 2,n
          if(abs(dx(i)).le.dmax) go to 30
-         idamax = i
+         e_idamax = i
          dmax = abs(dx(i))
    30 continue
       return
@@ -2732,7 +2713,7 @@ c
 c
 c=======================================================================
 c
-      SUBROUTINE XERBLA( SRNAME, INFO )
+      SUBROUTINE E_XERBLA( SRNAME, INFO )
 *
 *  -- LAPACK auxiliary routine (preliminary version) --
 *     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
@@ -2747,7 +2728,7 @@ c
 *  Purpose
 *  =======
 *
-*  XERBLA  is an error handler for the LAPACK routines.
+*  E_XERBLA  is an error handler for the LAPACK routines.
 *  It is called by an LAPACK routine if an input parameter has an
 *  invalid value.  A message is printed and execution stops.
 *
@@ -2758,7 +2739,7 @@ c
 *  =========
 *
 *  SRNAME  (input) CHARACTER*6
-*          The name of the routine which called XERBLA.
+*          The name of the routine which called E_XERBLA.
 *
 *  INFO    (input) INTEGER
 *          The position of the invalid parameter in the parameter list
@@ -2772,7 +2753,7 @@ c
  9999 FORMAT( ' ** On entry to ', A6, ' parameter number ', I2, ' had ',
      $      'an illegal value' )
 *
-*     End of XERBLA
+*     End of E_XERBLA
 *
       END
 c

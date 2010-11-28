@@ -29,7 +29,9 @@
 #include "ExternalBoundary.h"
 #include "Grid.h"
 #include "Hierarchy.h"
- 
+
+int search_lower_bound(int *arr, int value, int low, int high, 
+		       int total);
  
 int grid::CommunicationTransferParticles(grid* Grids[], int NumberOfGrids,
 					 int ThisGridNum, int TopGridDims[],
@@ -43,9 +45,9 @@ int grid::CommunicationTransferParticles(grid* Grids[], int NumberOfGrids,
  
   /* Declarations. */
  
-  int i, j, k, dim, grid, proc, grid_num, width, bin, CenterIndex;
+  int i, j, k, dim, grid, proc, grid_num, bin, CenterIndex;
   int GridPosition[MAX_DIMENSION];
-  int *ToGrid;
+  int *ToGrid, *pbin;
   FLOAT r[MAX_DIMENSION];
  
   for (dim = 0; dim < MAX_DIMENSION; dim++)
@@ -92,56 +94,37 @@ int grid::CommunicationTransferParticles(grid* Grids[], int NumberOfGrids,
 
     for (i = 0; i < NumberOfParticles; i++) {
 
-      for (dim = 0; dim < GridRank; dim++)
-	r[dim] = ParticlePosition[dim][i];
-      
-      
-      if (this->PointInGrid(r) == TRUE) {
-	grid = ThisGridNum;
-      } 
-
-      /* Particle outside grid.  Find new grid. */
-
-      else {
       for (dim = 0; dim < GridRank; dim++) {
-	CenterIndex = 
+
+	if (Layout[dim] == 1) {
+	  GridPosition[dim] = 0;
+	} else {
+
+	  CenterIndex = 
 	  (int) (TopGridDims[dim] * 
 		 (ParticlePosition[dim][i] - DomainLeftEdge[dim]) *
 		 DomainWidthInv[dim]);
 
-	// Binary search in the StartIndex to see where this grid lies
-	// in the partitions
-	width = bin = Layout[dim]/2;
-	if (width <= 1) {
-	  for (bin = 1; bin < Layout[dim]; bin++)
-	    if (CenterIndex < GStartIndex[dim][bin])
-	      break;
-	  bin = min(bin-1, Layout[dim]-1);
-	} else {
-	  while (width > 1) {
-	    width >>= 1;
-	    if (CenterIndex > GStartIndex[dim][bin])
-	      bin += width;
-	    else if (CenterIndex < GStartIndex[dim][bin])
-	      bin -= width;
-	    else
-	      break;
-	  } // ENDWHILE
-	} // ENDELSE (width == 1)
+	  GridPosition[dim] = 
+	    search_lower_bound(GStartIndex[dim], CenterIndex, 0, Layout[dim],
+			       Layout[dim]);
+	  GridPosition[dim] = min(GridPosition[dim], Layout[dim]-1);
+	  
+	} // ENDELSE
 
-	GridPosition[dim] = bin;
-	//GridPosition[dim] = min(GridPosition[dim], Layout[dim]-1);
       } // ENDFOR dim
 
       grid_num = GridPosition[0] + 
 	Layout[0] * (GridPosition[1] + Layout[1]*GridPosition[2]);
+
       grid = GridMap[grid_num];
       if (grid != ThisGridNum) {
 	proc = Grids[grid]->ReturnProcessorNumber();
 	NumberToMove[proc]++;
+//	printf("grid %d->%d: Pos = %f %f %f\n", ThisGridNum, grid, 
+//	       ParticlePosition[0][i], ParticlePosition[1][i], 
+//	       ParticlePosition[2][i]);
       }
-
-      } // ENDELSE PointInGrid()
 
       ToGrid[i] = grid;
 
@@ -341,8 +324,6 @@ int grid::CommunicationTransferParticles(grid* Grids[], int NumberOfGrids,
 
   } // end: if (COPY_IN)
 
-
- 
   return SUCCESS;
 }
 #endif /* OPTIMIZED_CTP */

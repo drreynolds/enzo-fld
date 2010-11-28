@@ -34,6 +34,8 @@
 Star *PopStar(Star * &Node);
 Star* StarBufferToList(StarBuffer buffer);
 void InsertStarAfter(Star * &Node, Star * &NewNode);
+int search_lower_bound(int *arr, int value, int low, int high, 
+		       int total);
  
 int grid::CommunicationTransferStars(grid* Grids[], int NumberOfGrids,
 				     int ThisGridNum, int TopGridDims[],
@@ -49,7 +51,7 @@ int grid::CommunicationTransferStars(grid* Grids[], int NumberOfGrids,
   int i, j, k, dim, grid, proc, grid_num, width, bin, CenterIndex;
   int GridPosition[MAX_DIMENSION];
   FLOAT r[MAX_DIMENSION];
-  int *ToGrid;
+  int *ToGrid, *pbin;
   Star *cstar, *MoveStar;
 
   for (dim = 0; dim < MAX_DIMENSION; dim++)
@@ -95,42 +97,24 @@ int grid::CommunicationTransferStars(grid* Grids[], int NumberOfGrids,
 
     for (cstar = Stars, i = 0; cstar; cstar = cstar->NextStar, i++) {
 
-      if (this->PointInGrid(cstar->pos) == TRUE) {
-	grid = ThisGridNum;
-      }
-
-      /* Star outside grid.  Find new grid. */
-
-      else {
-
       for (dim = 0; dim < GridRank; dim++) {
-	CenterIndex = 
+
+	if (Layout[dim] == 1) {
+	  GridPosition[dim] = 0;
+	} else {
+
+	  CenterIndex = 
 	  (int) (TopGridDims[dim] * 
-		 (ParticlePosition[dim][i] - DomainLeftEdge[dim]) *
+		 (cstar->pos[dim] - DomainLeftEdge[dim]) *
 		 DomainWidthInv[dim]);
 
-	// Binary search in the StartIndex to see where this grid lies
-	// in the partitions
-	width = bin = Layout[dim]/2;
-	if (width <= 1) {
-	  for (bin = 1; bin < Layout[dim]; bin++)
-	    if (CenterIndex < GStartIndex[dim][bin])
-	      break;
-	  bin = min(bin-1, Layout[dim]-1);
-	} else {
-	  while (width > 1) {
-	    width >>= 1;
-	    if (CenterIndex > GStartIndex[dim][bin])
-	      bin += width;
-	    else if (CenterIndex < GStartIndex[dim][bin])
-	      bin -= width;
-	    else
-	      break;
-	  } // ENDWHILE
-	} // ENDELSE (width == 1)
+	  GridPosition[dim] = 
+	    search_lower_bound(GStartIndex[dim], CenterIndex, 0, Layout[dim],
+			       Layout[dim]);
+	  GridPosition[dim] = min(GridPosition[dim], Layout[dim]-1);
 
-	GridPosition[dim] = bin;
-	//GridPosition[dim] = min(GridPosition[dim], Layout[dim]-1);
+	} // ENDELSE Layout
+
       } // ENDFOR dim
 
       grid_num = GridPosition[0] + 
@@ -140,8 +124,6 @@ int grid::CommunicationTransferStars(grid* Grids[], int NumberOfGrids,
 	proc = Grids[grid]->ReturnProcessorNumber();
 	NumberToMove[proc]++;
       }
-
-      } // ENDELSE PointInGrid()
 
       ToGrid[i] = grid;
 

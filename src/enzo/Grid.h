@@ -343,6 +343,11 @@ public:
 
    int InterpolateBoundaryFromParent(grid *ParentGrid);
 
+/* Member functions for dealing with thermal conduction */
+   int ComputeHeat(float dedt[]);	     /* Compute Heat */
+   int ConductHeat();			     /* Conduct Heat */
+   int ComputeConductionTimeStep(float &dt); /* Estimate conduction time-step */
+
 /* Baryons: Copy current solution to Old solution (returns success/fail)
     (for step #16) */
 
@@ -643,6 +648,9 @@ public:
 /* Solve the joint rate and radiative cooling/heating equations using MTurk's Solver */
 
    int SolveHighDensityPrimordialChemistry();
+#ifdef USE_CVODE
+   int SolvePrimordialChemistryCVODE();
+#endif
 
 /* Compute densities of various species for RadiationFieldUpdate. */
 
@@ -1457,7 +1465,8 @@ int CreateParticleTypeGrouping(hid_t ptype_dset,
 
 /* Move a grid from one processor to another. */
 
-  int CommunicationMoveGrid(int ToProcessor, int MoveParticles = TRUE);
+  int CommunicationMoveGrid(int ToProcessor, int MoveParticles = TRUE,
+			    int DeleteOldFields = TRUE);
 
 /* Send particles from one grid to another. */
 
@@ -1798,6 +1807,16 @@ int inteuler(int idim,
 
   int TestGravitySphereCheckResults(FILE *fptr);
 
+/* Conduction Test: initialize grid. */
+
+  int ConductionTestInitialize(float PulseHeight, FLOAT PulseWidth, int PulseType);
+
+/* Conducting Bubble Test: initialize grid. */
+
+  int ConductionBubbleInitialize(FLOAT BubbleRadius, int PulseType, float DeltaEntropy, 
+				 float MidpointEntropy, float EntropyGradient,
+				 float MidpointTemperature, FLOAT BubbleCenter[MAX_DIMENSION]);
+
 /* Spherical Infall Test: initialize grid. */
 
   int SphericalInfallInitializeGrid(float InitialPerturbation, int UseBaryons,
@@ -1856,15 +1875,17 @@ int inteuler(int idim,
 			  char *CosmologySimulationParticleVelocityName,
 			  char *CosmologySimulationParticleMassName,
 			  char *CosmologySimulationParticleTypeName,
+			  char *CosmologySimulationParticlePositionNames[],
 			  char *CosmologySimulationParticleVelocityNames[],
 			  int   CosmologySimulationSubgridsAreStatic,
 			  int   TotalRefinement,
-			  float CosmologySimulationInitialFrctionHII,
-			  float CosmologySimulationInitialFrctionHeII,
-			  float CosmologySimulationInitialFrctionHeIII,
-			  float CosmologySimulationInitialFrctionHM,
-			  float CosmologySimulationInitialFrctionH2I,
-			  float CosmologySimulationInitialFrctionH2II,
+			  float CosmologySimulationInitialFractionHII,
+			  float CosmologySimulationInitialFractionHeII,
+			  float CosmologySimulationInitialFractionHeIII,
+			  float CosmologySimulationInitialFractionHM,
+			  float CosmologySimulationInitialFractionH2I,
+			  float CosmologySimulationInitialFractionH2II,
+			  float CosmologySimulationInitialFractionMetal,
 #ifdef TRANSFER
 			  float RadHydroInitialRadiationEnergy,
 #endif
@@ -1873,6 +1894,15 @@ int inteuler(int idim,
 			  int CosmologySimulationManuallySetParticleMassRatio,
 			  float CosmologySimulationManualParticleMassRatio,
 			  int CosmologySimulationCalculatePositions);
+
+  int CosmologyReadParticles3D(
+		   char *CosmologySimulationParticleVelocityName,
+		   char *CosmologySimulationParticleMassName,
+		   char *CosmologySimulationParticleTypeName,
+		   char *CosmologySimulationParticleParticleNames[],
+		   char *CosmologySimulationParticleVelocityNames[],
+		   float CosmologySimulationOmegaBaryonNow,
+		   int *Offset, int level);
 
   int CosmologyInitializeParticles(
 		   char *CosmologySimulationParticleVelocityName,
@@ -1899,12 +1929,13 @@ int inteuler(int idim,
 			  char *CosmologySimulationParticleVelocityNames[],
 			  int   CosmologySimulationSubgridsAreStatic,
 			  int   TotalRefinement,
-			  float CosmologySimulationInitialFrctionHII,
-			  float CosmologySimulationInitialFrctionHeII,
-			  float CosmologySimulationInitialFrctionHeIII,
-			  float CosmologySimulationInitialFrctionHM,
-			  float CosmologySimulationInitialFrctionH2I,
-			  float CosmologySimulationInitialFrctionH2II,
+			  float CosmologySimulationInitialFractionHII,
+			  float CosmologySimulationInitialFractionHeII,
+			  float CosmologySimulationInitialFractionHeIII,
+			  float CosmologySimulationInitialFractionHM,
+			  float CosmologySimulationInitialFractionH2I,
+			  float CosmologySimulationInitialFractionH2II,
+			  float CosmologySimulationInitialFractionMetal,
 			  int   CosmologySimulationUseMetallicityField,
 			  PINT &CurrentNumberOfParticles,
 			  int CosmologySimulationManuallySetParticleMassRatio,
@@ -1950,6 +1981,9 @@ int inteuler(int idim,
 
   /* Put Sink restart initialize grid. */
   int PutSinkRestartInitialize(int level ,int *NumberOfCellsSet);
+
+  /* PhotonTest restart initialize grid. */
+  int PhotonTestRestartInitialize(int level ,int *NumberOfCellsSet);
 
   /* Free-streaming radiation test problem: initialize grid (SUCCESS or FAIL) */
   int FSMultiSourceInitializeGrid(float DensityConst, float V0Const, 

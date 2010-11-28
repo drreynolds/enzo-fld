@@ -122,6 +122,8 @@ MACHNOTES:
 	fi)  
 	@(if [ -e $@ ] ; then  \
 		echo "Success!" ; \
+                if [ ! -e $(TOP_DIR)/bin ]; then mkdir $(TOP_DIR)/bin; fi; \
+                cp $(EXE).exe $(TOP_DIR)/bin/$(EXE); \
 	else \
 		echo "$(LD) $(LDFLAGS) -o $*.exe $*.o $(OBJS_LIB) $(LIBS)" > temp1; \
 		cat temp1 $(OUTPUT) > temp2 ;\
@@ -157,17 +159,17 @@ verbose: $(EXE).exe
 	@echo "Compiling $<"
 	@rm -f $@
 	@(if [ $(VERBOSE) -eq 0 ]; then \
-	  $(FC) -c -o $@ $(FFLAGS) $(DEFINES) $(CPPFLAGS) $*.F >& $(OUTPUT) ; \
+	  $(FC) -c -o $@ $(FFLAGS) $(DEFINES) $*.F >& $(OUTPUT) ; \
 	  if [ ! -e $@ ]; then \
              echo; \
-             echo "$(FC) -c -o $@ $(FFLAGS) $(DEFINES) $(CPPFLAGS) $*.F"; \
+             echo "$(FC) -c -o $@ $(FFLAGS) $(DEFINES) $*.F"; \
              echo; \
-             $(FC) -c -o $@ $(FFLAGS) $(DEFINES) $(CPPFLAGS) $*.F; \
+             $(FC) -c -o $@ $(FFLAGS) $(DEFINES) $*.F; \
              echo; \
              exit 1; \
           fi ; \
 	else \
-	  $(FC) -c -o $@ $(FFLAGS)  $(DEFINES) $(CPPFLAGS) $*.F >> $(OUTPUT) 2>&1 ; \
+	  $(FC) -c -o $@ $(FFLAGS)  $(DEFINES) $*.F >> $(OUTPUT) 2>&1 ; \
 	  if [ ! -e $@ ]; then \
 	     echo "See $(OUTPUT) for error messages"; \
 	     exit 1; \
@@ -180,17 +182,17 @@ verbose: $(EXE).exe
 .F90.o:
 	@rm -f $@
 	@(if [ $(VERBOSE) -eq 0 ]; then \
-	  $(F90) -c -o $@ $(F90FLAGS) $(DEFINES) $(CPPFLAGS) $*.F90 >& $(OUTPUT) ; \
+	  $(F90) -c -o $@ $(F90FLAGS) $(DEFINES) $*.F90 >& $(OUTPUT) ; \
 	  if [ ! -e $@ ]; then \
              echo; \
-             echo "$(F90) -c -o $@ $(DEFINES) $(CPPFLAGS) $(F90FLAGS) $*.F90"; \
+             echo "$(F90) -c -o $@ $(DEFINES) $(F90FLAGS) $*.F90"; \
              echo; \
              $(F90) -c -o $@ $(F90FLAGS) $*.F90; \
              echo; \
              exit 1; \
 	  fi ; \
 	else \
-	  $(F90) -c -o $@ $(F90FLAGS) $(DEFINES) $(CPPFLAGS) $*.F90 >> $(OUTPUT) 2>&1 ; \
+	  $(F90) -c -o $@ $(F90FLAGS) $(DEFINES) $*.F90 >> $(OUTPUT) 2>&1 ; \
 	  if [ ! -e $@ ]; then \
 	     echo "See $(OUTPUT) for error messages"; \
 	     exit 1; \
@@ -309,13 +311,6 @@ svn_version.def:
 	printf "#define ENZO_SVN_BRANCH \"\"\n" >> svn_version.def; \
 	fi
 
-# Determine Enzo version
-
-.PHONY: get-version
-get-version:
-	@$(SVN) info $(TOP_DIR) | awk '/URL/{print $$2}'      > $(TOP_DIR)/BRANCH
-	@$(SVN) info $(TOP_DIR) | awk '/Revision/{print $$2}' > $(TOP_DIR)/REVISION
-
 #-----------------------------------------------------------------------
 # Generate dependency file
 #-----------------------------------------------------------------------
@@ -323,7 +318,7 @@ get-version:
 .PHONY: dep
 dep:
 	@echo "Updating DEPEND"
-	-@(makedepend $(DEFINES) $(INCLUDES) -fDEPEND -o.o -m -- -- *.C *.c *.src *src90 *.h) >& out.make.DEPEND
+	-@(makedepend $(DEFINES) $(INCLUDES) -fDEPEND -o.o -m -- -- *.C *.c *.F *.F90 *.h) >& out.make.DEPEND
 
 include DEPEND
 
@@ -355,8 +350,8 @@ help:
 	@echo "   gmake clean          Remove object files, executable, etc."
 	@echo "   gmake dep            Create make dependencies in DEPEND file"
 	@echo
-	@echo "   gmake get-version    Generate version-related files"
-	@echo "   gmake show-version   Display Subversion branch and revision"
+	@echo "   gmake show-version   Display revision control system branch and revision"
+	@echo "   gmake show-diff      Display local file modifications"
 	@echo
 	@echo "   gmake help-config    Display detailed help on configuration make targets"
 	@echo "   gmake show-config    Display the configuration settings"
@@ -368,10 +363,13 @@ help:
 
 clean:
 	-@rm -f *.o uuid/*.o *.mod *.f *.f90 DEPEND.bak *~ $(OUTPUT) *.exe \
-          auto_show*.C svn_version.def hydro_rk/*.o
+          auto_show*.C svn_version.def hydro_rk/*.o *.oo hydro_rk/*.oo \
+          uuid/*.oo DEPEND
+	-@touch DEPEND
 
 #-----------------------------------------------------------------------
 # Include configuration targets
 #-----------------------------------------------------------------------
 
 include $(ENZO_DIR)/Make.config.targets
+# DO NOT DELETE

@@ -85,8 +85,16 @@ EXTERN int RadiativeTransferAdaptiveTimestep;
 
 EXTERN float GlobalMaximumkphIfront;
 
+/* Angle (in degrees) to collimate radiation for PhotonSourceType = 2 */
+
+EXTERN float RadiativeTransferSourceBeamAngle;
+
 /* Flag to trace the spectrum in ray tracing */
 
 EXTERN int RadiativeTransferTraceSpectrum;
 
 EXTERN char *RadiativeTransferTraceSpectrumTable;
+
+/* Flag for temporary load balancing for the ray tracing */
+
+EXTERN int RadiativeTransferLoadBalance;

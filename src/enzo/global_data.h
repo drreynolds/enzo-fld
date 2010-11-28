@@ -159,6 +159,13 @@ EXTERN int ConservativeInterpolation;
 
 EXTERN float MinimumEfficiency;
 
+/* This flag will automatically adjust MinimumSubgridEdge and
+   MaximumSubgridSize.  It will select MaximumSubgridSize from
+   OptimalSubgridPerProcessor. */
+
+EXTERN int SubgridSizeAutoAdjust;
+EXTERN int OptimalSubgridsPerProcessor;
+
 /* This is the minimum allowable edge size for a new subgrid (>=4) */
 
 EXTERN int MinimumSubgridEdge;
@@ -521,7 +528,10 @@ EXTERN int   StarParticleFeedback;
 EXTERN int   NumberOfParticleAttributes;
 EXTERN int   AddParticleAttributes;
 EXTERN int   BigStarFormation;
+EXTERN int   BigStarFormationDone;
 EXTERN float BigStarSeparation;
+EXTERN float SimpleQ;
+EXTERN float SimpleRampTime;
 
 
 /* Parameters governing certain time or redshift-dependent actions. */
@@ -852,5 +862,11 @@ EXTERN int VelAnyl;
 EXTERN int BAnyl;
 
 EXTERN char current_error[255];
+
+/* Thermal conduction */
+
+EXTERN int Conduction;  // TRUE OR FALSE
+EXTERN float ConductionSpitzerFraction;  // f_Spitzer
+EXTERN float ConductionCourantSafetyNumber;
 
 #endif

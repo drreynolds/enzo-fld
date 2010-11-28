@@ -274,27 +274,30 @@ int WriteParameterFile(FILE *fptr, TopGridData &MetaData)
  
   /* write global Parameters */
  
-  fprintf(fptr, "ProblemType            = %"ISYM"\n", ProblemType);
-  fprintf(fptr, "HydroMethod            = %"ISYM"\n", HydroMethod);
-  fprintf(fptr, "huge_number            = %e\n", huge_number);
-  fprintf(fptr, "tiny_number            = %e\n", tiny_number);
-  fprintf(fptr, "Gamma                  = %"GSYM"\n", Gamma);
-  fprintf(fptr, "PressureFree           = %"ISYM"\n", PressureFree);
-  fprintf(fptr, "RefineBy               = %"ISYM"\n", RefineBy);
-  fprintf(fptr, "MaximumRefinementLevel = %"ISYM"\n", MaximumRefinementLevel);
-  fprintf(fptr, "MaximumGravityRefinementLevel = %"ISYM"\n",
+  fprintf(fptr, "ProblemType                    = %"ISYM"\n", ProblemType);
+  fprintf(fptr, "HydroMethod                    = %"ISYM"\n", HydroMethod);
+  fprintf(fptr, "huge_number                    = %e\n", huge_number);
+  fprintf(fptr, "tiny_number                    = %e\n", tiny_number);
+  fprintf(fptr, "Gamma                          = %"GSYM"\n", Gamma);
+  fprintf(fptr, "PressureFree                   = %"ISYM"\n", PressureFree);
+  fprintf(fptr, "RefineBy                       = %"ISYM"\n", RefineBy);
+  fprintf(fptr, "MaximumRefinementLevel         = %"ISYM"\n", MaximumRefinementLevel);
+  fprintf(fptr, "MaximumGravityRefinementLevel  = %"ISYM"\n",
 	  MaximumGravityRefinementLevel);
   fprintf(fptr, "MaximumParticleRefinementLevel = %"ISYM"\n",
 	  MaximumParticleRefinementLevel);
-  fprintf(fptr, "CellFlaggingMethod     = ");
+  fprintf(fptr, "CellFlaggingMethod             = ");
   WriteListOfInts(fptr, MAX_FLAGGING_METHODS, CellFlaggingMethod);
-  fprintf(fptr, "FluxCorrection         = %"ISYM"\n", FluxCorrection);
-  fprintf(fptr, "InterpolationMethod    = %"ISYM"\n", InterpolationMethod);
-  fprintf(fptr, "ConservativeInterpolation = %"ISYM"\n", ConservativeInterpolation);
-  fprintf(fptr, "MinimumEfficiency      = %"GSYM"\n", MinimumEfficiency);
-  fprintf(fptr, "MinimumSubgridEdge     = %"ISYM"\n", MinimumSubgridEdge);
-  fprintf(fptr, "MaximumSubgridSize     = %"ISYM"\n", MaximumSubgridSize);
-  fprintf(fptr, "NumberOfBufferZones    = %"ISYM"\n\n", NumberOfBufferZones);
+  fprintf(fptr, "FluxCorrection                 = %"ISYM"\n", FluxCorrection);
+  fprintf(fptr, "InterpolationMethod            = %"ISYM"\n", InterpolationMethod);
+  fprintf(fptr, "ConservativeInterpolation      = %"ISYM"\n", ConservativeInterpolation);
+  fprintf(fptr, "MinimumEfficiency              = %"GSYM"\n", MinimumEfficiency);
+  fprintf(fptr, "SubgridSizeAutoAdjust          = %"ISYM"\n", SubgridSizeAutoAdjust);
+  fprintf(fptr, "OptimalSubgridsPerProcessor    = %"ISYM"\n", 
+	  OptimalSubgridsPerProcessor);
+  fprintf(fptr, "MinimumSubgridEdge             = %"ISYM"\n", MinimumSubgridEdge);
+  fprintf(fptr, "MaximumSubgridSize             = %"ISYM"\n", MaximumSubgridSize);
+  fprintf(fptr, "NumberOfBufferZones            = %"ISYM"\n\n", NumberOfBufferZones);
 
   fprintf(fptr, "FastSiblingLocatorEntireDomain      = %"ISYM"\n", 
 	  FastSiblingLocatorEntireDomain);
@@ -429,11 +432,21 @@ int WriteParameterFile(FILE *fptr, TopGridData &MetaData)
   fprintf(fptr, "RadiationShield                = %"ISYM"\n", RadiationData.RadiationShield);
   fprintf(fptr, "RadiationSpectrumNormalization = %"GSYM"\n", CoolData.f3);
   fprintf(fptr, "RadiationSpectrumSlope         = %"GSYM"\n", CoolData.alpha0);
+  fprintf(fptr, "CoolDataf0to3                  = %"FSYM"\n", CoolData.f0to3);
+  fprintf(fptr, "RadiationRedshiftOn            = %"FSYM"\n", CoolData.RadiationRedshiftOn);
+  fprintf(fptr, "RadiationRedshiftOff           = %"FSYM"\n", CoolData.RadiationRedshiftOff);
+  fprintf(fptr, "RadiationRedshiftFullOn        = %"FSYM"\n", CoolData.RadiationRedshiftFullOn);
+  fprintf(fptr, "RadiationRedshiftDropOff       = %"FSYM"\n", CoolData.RadiationRedshiftDropOff);
+  fprintf(fptr, "HydrogenFractionByMass         = %"FSYM"\n", CoolData.HydrogenFractionByMass);
+  fprintf(fptr, "DeuteriumToHydrogenRatio       = %"FSYM"\n", CoolData.DeuteriumToHydrogenRatio);
+  fprintf(fptr, "NumberOfTemperatureBins        = %"ISYM"\n", CoolData.NumberOfTemperatureBins);
+  fprintf(fptr, "CoolDataIh2co                  = %"ISYM"\n", CoolData.ih2co);
+  fprintf(fptr, "CoolDataIpiht                  = %"ISYM"\n", CoolData.ipiht);
+  fprintf(fptr, "TemperatureStart               = %"FSYM"\n", CoolData.TemperatureStart);
+  fprintf(fptr, "TemperatureEnd                 = %"FSYM"\n", CoolData.TemperatureEnd);
+  fprintf(fptr, "CoolDataCompXray               = %"FSYM"\n", CoolData.comp_xray);
+  fprintf(fptr, "CoolDataTempXray               = %"FSYM"\n", CoolData.temp_xray);
   fprintf(fptr, "PhotoelectricHeating           = %"ISYM"\n", PhotoelectricHeating);
-
-  if (CoolData.ParameterFilename != NULL)
-    fprintf(fptr, "CoolDataParameterFile = %s\n\n", CoolData.ParameterFilename);
-
   
   fprintf(fptr, "VelAnyl                        = %"ISYM"\n", VelAnyl);
   fprintf(fptr, "BAnyl                          = %"ISYM"\n", BAnyl);
@@ -603,8 +616,14 @@ int WriteParameterFile(FILE *fptr, TopGridData &MetaData)
 	  StarParticleCreation);
   fprintf(fptr, "BigStarFormation                      = %"ISYM"\n",
 	  BigStarFormation);
+  fprintf(fptr, "BigStarFormationDone                  = %"ISYM"\n",
+	  BigStarFormationDone);
   fprintf(fptr, "BigStarSeparation                     = %"FSYM"\n",
 	  BigStarSeparation);
+  fprintf(fptr, "SimpleQ                               = %"FSYM"\n",
+	  SimpleQ);
+  fprintf(fptr, "SimpleRampTime                        = %"FSYM"\n",
+	  SimpleRampTime);
   fprintf(fptr, "StarParticleFeedback                  = %"ISYM"\n",
 	  StarParticleFeedback);
   fprintf(fptr, "NumberOfParticleAttributes            = %"ISYM"\n",
@@ -647,6 +666,9 @@ int WriteParameterFile(FILE *fptr, TopGridData &MetaData)
           StarEnergyToQuasarUV);
   fprintf(fptr, "MultiMetals                           = %"ISYM"\n",
           MultiMetals);
+  fprintf(fptr, "Conduction                      = %"ISYM"\n", Conduction);
+  fprintf(fptr, "ConductionSpitzerFraction       = %"FSYM"\n", ConductionSpitzerFraction);
+  fprintf(fptr, "ConductionCourantSafetyNumber   = %"FSYM"\n", ConductionCourantSafetyNumber);
 
   fprintf(fptr, "RefineByJeansLengthUnits              = %"ISYM"\n",RefineByJeansLengthUnits);
   fprintf(fptr, "IsothermalSoundSpeed                  = %"GSYM"\n",IsothermalSoundSpeed);
@@ -772,7 +794,7 @@ int WriteParameterFile(FILE *fptr, TopGridData &MetaData)
   fprintf(fptr, "UseDrivingField            = %d\n", UseDrivingField);
   fprintf(fptr, "DrivingEfficiency          = %f\n", DrivingEfficiency);
 #ifdef ECUDA
-  fprintf(fptr, "UseCUDA = %f\n", UseCUDA);
+  fprintf(fptr, "UseCUDA = %"ISYM"\n", UseCUDA);
 #endif
 
   /* Poisson Solver */

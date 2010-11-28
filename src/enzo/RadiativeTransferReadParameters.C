@@ -63,6 +63,11 @@ int RadiativeTransferReadParameters(FILE *fptr)
   RadiativeTransferHydrogenOnly               = FALSE;
   RadiativeTransferTraceSpectrum              = FALSE;
   RadiativeTransferTraceSpectrumTable         = (char*) "spectrum_table.dat";
+  RadiativeTransferSourceBeamAngle            = 30.0;
+  RadiativeTransferLoadBalance                = FALSE;
+
+  if (MultiSpecies == 0)
+    RadiativeTransferOpticallyThinH2 = FALSE;
 
   /* read input from file */
 
@@ -104,6 +109,8 @@ int RadiativeTransferReadParameters(FILE *fptr)
 		  &RadiativeTransferPhotonMergeRadius);
     ret += sscanf(line, "RadiativeTransferFLDCallOnLevel = %"ISYM, 
 		  &RadiativeTransferFLDCallOnLevel);
+    ret += sscanf(line, "RadiativeTransferSourceBeamAngle = %"FSYM, 
+		  &RadiativeTransferSourceBeamAngle);
     ret += sscanf(line, "RadiativeTransferHIIRestrictedTimestep = %"ISYM, 
 		  &RadiativeTransferHIIRestrictedTimestep);
     ret += sscanf(line, "RadiativeTransferAdaptiveTimestep = %"ISYM, 
@@ -112,6 +119,8 @@ int RadiativeTransferReadParameters(FILE *fptr)
 		  &RadiativeTransferHydrogenOnly);
     ret += sscanf(line, "RadiativeTransferTraceSpectrum = %"ISYM, 
 		  &RadiativeTransferTraceSpectrum);
+    ret += sscanf(line, "RadiativeTransferLoadBalance = %"ISYM, 
+		  &RadiativeTransferLoadBalance);
     if (sscanf(line, "RadiativeTransferTraceSpectrumTable = %s", dummy) == 1)
       RadiativeTransferTraceSpectrumTable = dummy;  
     ret += sscanf(line, "dtPhoton = %"FSYM, &dtPhoton);
