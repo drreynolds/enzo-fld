@@ -341,8 +341,8 @@ int grid::TurbulenceInitializeGrid(float CloudDensity, float CloudSoundSpeed, FL
 
           if (CloudType ==6) {
 	    //Density = max(DensityUnits, 0.5*CloudDensity/(1.0 + pow(4.0*r/CloudRadius,2)));
-	    Density = CloudDensity/1000.0;
-	    eint = CloudInternalEnergy*200.0; //400.0;
+	    Density = 0.1*CloudDensity/(1.0 + pow(4.0,2));
+	    eint = CloudInternalEnergy*100.0; //400.0;
 	  }
 
 	}
@@ -450,9 +450,9 @@ int grid::TurbulenceInitializeGrid(float CloudDensity, float CloudSoundSpeed, FL
     }
     if (CloudType == 4 || CloudType == 6) {
       k1 = 2.0;
-      k2 = min(34.0, GridDimension[0]/10);
+      k2 = min(34.0, int(GridDimension[0]/10));
       printf("                GridDimension[0] = %"ISYM"\n",GridDimension[0] );
-      dk = 1.0;
+      dk = max(1.0,int((k2-k1)/10));
     }
     if (CloudType == 7) {
       k1 = 1.0;

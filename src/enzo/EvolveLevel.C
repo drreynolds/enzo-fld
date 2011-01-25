@@ -233,7 +233,7 @@ int SetLevelTimeStep(HierarchyEntry *Grids[],
 void my_exit(int status);
  
 int CallPython(LevelHierarchyEntry *LevelArray[], TopGridData *MetaData,
-               int level);
+               int level, int from_topgrid);
 int MovieCycleCount[MAX_DEPTH_OF_HIERARCHY];
 double LevelWallTime[MAX_DEPTH_OF_HIERARCHY];
 double LevelZoneCycleCount[MAX_DEPTH_OF_HIERARCHY];
@@ -620,7 +620,7 @@ int EvolveLevel(TopGridData *MetaData, LevelHierarchyEntry *LevelArray[],
 			  , ImplicitSolver
 #endif
 			  );
-    CallPython(LevelArray, MetaData, level);
+    CallPython(LevelArray, MetaData, level, 0);
 
     /* Update SubcycleNumber and the timestep counter for the
        streaming data if this is the bottom of the hierarchy -- Note
