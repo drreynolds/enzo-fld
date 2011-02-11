@@ -61,7 +61,11 @@ struct LevelHierarchyEntry;
 
 class grid
 {
+#ifdef NEW_PROBLEM_TYPES
+ protected:
+#else
  private:
+#endif
 //
 //  General grid class data
 //
@@ -171,7 +175,7 @@ class grid
   friend int ProtoSubgrid::CopyFlaggedZonesFromGrid(grid *Grid);
   friend class Star;
 #ifdef NEW_PROBLEM_TYPES
-  friend class ProblemType;
+  friend class EnzoProblemType;
 #endif
 
 #ifdef TRANSFER
@@ -1811,6 +1815,10 @@ int inteuler(int idim,
 
   int ConductionTestInitialize(float PulseHeight, FLOAT PulseWidth, int PulseType);
 
+/* Conduction Test: initialize grid. */
+
+  int ConductionCloudInitialize(float CloudOverdensity, FLOAT CloudWidth, int CloudType);
+
 /* Conducting Bubble Test: initialize grid. */
 
   int ConductionBubbleInitialize(FLOAT BubbleRadius, int PulseType, float DeltaEntropy, 
@@ -2087,9 +2095,14 @@ int inteuler(int idim,
 
 #define TURBULENCE_INIT_PARAMETERS_DECL \
      float TurbulenceSimulationInitialDensity, \
+     float TurbulenceSimulationInitialDensityPerturbationAmplitude, \
      float TurbulenceSimulationInitialTemperature, \
+     float TurbulenceSimulationInitialPressure, \
+     float TurbulenceSimulationInitialMagneticField[], \
+     char *TurbulenceSimulationMagneticNames[], \
      char *TurbulenceSimulationDensityName, \
      char *TurbulenceSimulationTotalEnergyName, \
+     char *TurbulenceSimulationGasPressureName, \
      char *TurbulenceSimulationGasEnergyName, \
      char *TurbulenceSimulationVelocityNames[], \
      char *TurbulenceSimulationRandomForcingNames[], \
@@ -2099,9 +2112,14 @@ int inteuler(int idim,
 
 #define TURBULENCE_INIT_PARAMETERS \
      TurbulenceSimulationInitialDensity, \
+     TurbulenceSimulationInitialDensityPerturbationAmplitude, \
      TurbulenceSimulationInitialTemperature, \
+     TurbulenceSimulationInitialPressure, \
+     TurbulenceSimulationInitialMagneticField, \
+     TurbulenceSimulationMagneticNames, \
      TurbulenceSimulationDensityName, \
      TurbulenceSimulationTotalEnergyName, \
+     TurbulenceSimulationGasPressureName, \
      TurbulenceSimulationGasEnergyName, \
      TurbulenceSimulationVelocityNames, \
      TurbulenceSimulationRandomForcingNames, \
@@ -2110,6 +2128,7 @@ int inteuler(int idim,
 
 
  int TurbulenceSimulationInitializeGrid(TURBULENCE_INIT_PARAMETERS_DECL);
+ int ComputeRandomForcingFields(int mode);
 
   // The following are private since they should only be called by
   // TurbulenceSimulationInitializeGrid()

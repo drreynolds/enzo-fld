@@ -272,6 +272,13 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
     /* read global Parameters */
  
     ret += sscanf(line, "ProblemType            = %"ISYM, &ProblemType);
+#ifdef NEW_PROBLEM_TYPES
+    if (sscanf(line, "ProblemTypeName = %s", dummy) == 1) {
+      ProblemTypeName = dummy;
+      ProblemType = -978;
+      ret = 1;
+    }
+#endif
     ret += sscanf(line, "HydroMethod            = %"ISYM, &HydroMethod);
     if (HydroMethod==MHD_RK) useMHD = 1;
 
@@ -419,6 +426,7 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
     ret += sscanf(line, "StorePreShockFields = %"ISYM, &StorePreShockFields);
 
     ret += sscanf(line, "RadiationFieldType = %"ISYM, &RadiationFieldType);
+    ret += sscanf(line, "TabulatedLWBackground = %"ISYM, &TabulatedLWBackground);
     ret += sscanf(line, "AdjustUVBackground = %"ISYM, &AdjustUVBackground);
     ret += sscanf(line, "SetUVBAmplitude = %"FSYM, &SetUVBAmplitude);
     ret += sscanf(line, "SetHeIIHeatingScale = %"FSYM, &SetHeIIHeatingScale);
@@ -776,6 +784,7 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
 
     ret += sscanf(line, "MultiMetals = %"ISYM, &MultiMetals);
     ret += sscanf(line, "Conduction = %"ISYM, &Conduction);
+    ret += sscanf(line, "AnisotropicConduction = %"ISYM, &AnisotropicConduction);
     ret += sscanf(line, "ConductionSpitzerFraction = %"FSYM, &ConductionSpitzerFraction);
     ret += sscanf(line, "ConductionCourantSafetyNumber = %"FSYM, &ConductionCourantSafetyNumber);
 
@@ -919,6 +928,7 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
     if (strstr(line, "KelvinHelmholtz")     ) ret++;
     if (strstr(line, "KH")                  ) ret++;
     if (strstr(line, "Noh")                 ) ret++;
+    if (strstr(line, "TestProblem")         ) ret++;
     if (strstr(line, "ZeldovichPancake")    ) ret++;
     if (strstr(line, "PressurelessCollapse")) ret++;
     if (strstr(line, "AdiabaticExpansion" ) ) ret++;
@@ -935,6 +945,7 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
     if (strstr(line, "GalaxySimulation")) ret++;
     if (strstr(line, "ConductionTest")) ret++;
     if (strstr(line, "ConductionBubble")) ret++;
+    if (strstr(line, "ConductionCloud")) ret++;
     if (strstr(line, "CoolingTest")) ret++;
     if (strstr(line, "ShearingBox")) ret++;
     if (strstr(line, "PoissonSolverTest")) ret++;
@@ -1001,6 +1012,16 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
     rewind(fptr);
   }
 
+  // make sure that Conduction is turned on if AnisotropicConduction is turned on.
+  if(AnisotropicConduction==TRUE)
+    Conduction==TRUE;
+
+  // make sure that MHD is turned on if we're trying to use anisotropic conduction.
+  // if not, alert user.
+  if(AnisotropicConduction==TRUE && useMHD==0){
+    ENZO_FAIL("AnisotropicConduction can only be used if MHD is turned on!\n");
+  }  
+    
   /*
     if (EOSType == 3) // an isothermal equation of state implies the adiabatic index = 1 
     Gamma = 1; 
@@ -1249,6 +1270,12 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
     ParallelRootGridIO = 1;
     ParallelParticleIO = 1;
   }
+
+  if(ProblemType==70 && UseHydro==1){
+    printf("ReadParameterFile: ProblemType=70.  Disabling hydrodynamics!\n");
+    UseHydro=FALSE;
+  }
+
 
   if ((MetaData.GravityBoundary != TopGridPeriodic) &&
       (UnigridTranspose)) {
