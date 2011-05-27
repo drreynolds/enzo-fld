@@ -28,7 +28,7 @@
 
 int GetUnits(float *DensityUnits, float *LengthUnits,
 	     float *TemperatureUnits, float *TimeUnits,
-	     float *VelocityUnits, float *MassUnits, FLOAT Time);
+	     float *VelocityUnits, double *MassUnits, FLOAT Time);
 
 // Problem Initializer
 int ConductionCloudInitialize(FILE *fptr, FILE *Outfptr, HierarchyEntry &TopGrid, TopGridData &MetaData){
@@ -114,7 +114,8 @@ int ConductionCloudInitialize(FILE *fptr, FILE *Outfptr, HierarchyEntry &TopGrid
   }
 
   float DensityUnits=1.0, LengthUnits=1.0, TemperatureUnits=1.0, TimeUnits=1.0,
-    VelocityUnits=1.0, MassUnits=1.0;
+    VelocityUnits=1.0;
+  double MassUnits=1.0;
 
   if (GetUnits(&DensityUnits, &LengthUnits, &TemperatureUnits,
 	       &TimeUnits, &VelocityUnits, &MassUnits, 0.0) == FAIL) {
@@ -151,8 +152,8 @@ int ConductionCloudInitialize(FILE *fptr, FILE *Outfptr, HierarchyEntry &TopGrid
   // set up field names and units
   i = 0;
   DataLabel[i++] = "Density";
-  DataLabel[i++] = "Total_Energy";
-  if (DualEnergyFormalism) {DataLabel[i++] = "Gas_Energy";}
+  DataLabel[i++] = "TotalEnergy";
+  if (DualEnergyFormalism) {DataLabel[i++] = "GasEnergy";}
   if (MetaData.TopGridRank > 0) {DataLabel[i++] = "x-velocity";}
   if (MetaData.TopGridRank > 1) {DataLabel[i++] = "y-velocity";}
   if (MetaData.TopGridRank > 2) {DataLabel[i++] = "z-velocity";}

@@ -294,7 +294,7 @@ int grid::SolveHydroEquations(int CycleNumber, int NumberOfSubgrids,
     /* Determine if Gamma should be a scalar or a field. */
     
     int UseGammaField = FALSE;
-    float *GammaField;
+    float *GammaField = NULL;
     if (HydroMethod == Zeus_Hydro && MultiSpecies > 1) {
       UseGammaField = TRUE;
       GammaField = new float[size];
@@ -302,7 +302,7 @@ int grid::SolveHydroEquations(int CycleNumber, int NumberOfSubgrids,
 	ENZO_FAIL("Error in grid->ComputeGammaField.");
       }
     } else {
-      GammaField = new float[1];
+      GammaField = new float;
       GammaField[0] = Gamma;
     }
 
@@ -400,7 +400,7 @@ int grid::SolveHydroEquations(int CycleNumber, int NumberOfSubgrids,
     if (ComovingCoordinates)
       if (CosmologyComputeExpansionFactor(Time+0.5*dtFixed, &a, &dadt) 
 	  == FAIL) {
-	ENZO_FAIL("Error in CsomologyComputeExpansionFactors.");
+	ENZO_FAIL("Error in CosmologyComputeExpansionFactors.");
       }
 
     /* Create a cell width array to pass (and convert to absolute coords). */
@@ -420,20 +420,24 @@ int grid::SolveHydroEquations(int CycleNumber, int NumberOfSubgrids,
     int GravityOn = 0, FloatSize = sizeof(float);
     if (SelfGravity || UniformGravity || PointSourceGravity)
       GravityOn = 1;
+#ifdef TRANSFER
+    if (RadiationPressure)
+      GravityOn = 1;
+#endif    
 
     /* Call Solver on this grid.
        Notice that it is hard-wired for three dimensions, but it does
        the right thing for < 3 dimensions. */
     /* note: Start/EndIndex are zero based */
         
-    if (HydroMethod == PPM_DirectEuler && ProblemType != 70)
+    if (HydroMethod == PPM_DirectEuler)
       this->SolvePPM_DE(CycleNumber, NumberOfSubgrids, SubgridFluxes, 
 			CellWidthTemp, GridGlobalStart, GravityOn, 
 			NumberOfColours, colnum);
 
     /* PPM LR has been withdrawn. */
 
-    if (HydroMethod == PPM_LagrangeRemap && ProblemType != 70) {
+    if (HydroMethod == PPM_LagrangeRemap) {
 #ifdef PPM_LR
       FORTRAN_NAME(ppm_lr)(
 			density, totalenergy, velocity1, velocity2, velocity3,
@@ -460,7 +464,7 @@ int grid::SolveHydroEquations(int CycleNumber, int NumberOfSubgrids,
 #endif /* PPM_LR */
     }
 
-    if (HydroMethod == Zeus_Hydro && ProblemType != 70)
+    if (HydroMethod == Zeus_Hydro)
       if (this->ZeusSolver(GammaField, UseGammaField, CycleNumber, 
 			   CellWidthTemp[0], CellWidthTemp[1], CellWidthTemp[2],
 			   GravityOn, NumberOfSubgrids, GridGlobalStart,
@@ -470,9 +474,9 @@ int grid::SolveHydroEquations(int CycleNumber, int NumberOfSubgrids,
 	ENZO_FAIL("ZeusSolver() failed!\n");
 	
 
+
     /* Clean up allocated fields. */
 
-    delete [] GammaField;
 
     for (dim = 0; dim < MAX_DIMENSION; dim++)
       delete [] CellWidthTemp[dim];

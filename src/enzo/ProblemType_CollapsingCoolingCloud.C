@@ -99,8 +99,8 @@ class ProblemType_CollapsingCoolingCloud : public EnzoProblemType
       }
 
       char *DensName = "Density";
-      char *TEName   = "Total_Energy";
-      char *GEName   = "Gas_Energy";
+      char *TEName   = "TotalEnergy";
+      char *GEName   = "GasEnergy";
       char *Vel1Name = "x-velocity";
       char *Vel2Name = "y-velocity";
       char *Vel3Name = "z-velocity";
@@ -244,7 +244,8 @@ class ProblemType_CollapsingCoolingCloud : public EnzoProblemType
       /* Set the units. */
       
       float DensityUnits = 1.0, LengthUnits = 1.0, TemperatureUnits = 1.0,
-	TimeUnits = 1.0, VelocityUnits = 1.0, MassUnits=1.0;
+	TimeUnits = 1.0, VelocityUnits = 1.0;
+      double MassUnits=1.0;
       FLOAT Time=0.0;
       if (GetUnits(&DensityUnits, &LengthUnits, &TemperatureUnits,
 		   &TimeUnits, &VelocityUnits, &MassUnits, Time) == FAIL) {

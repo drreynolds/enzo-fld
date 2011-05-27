@@ -80,7 +80,7 @@
 
 #define MAX_MOVIE_FIELDS                    6
 
-#define MAX_POTENTIAL_ITERATIONS            8
+#define MAX_POTENTIAL_ITERATIONS            80
 
 #define MAX_ENERGY_BINS                    10
 
@@ -500,6 +500,11 @@ typedef int            HDF5_hid_t;
 #define LOCAL_ACCRETION 0  // accrete a fraction of the mass in the cell
 #define BONDI_ACCRETION 1
 #define RADIAL_ACCRETION 2 // accrete based on a radial profile of dM/dt
+
+/* Correcting Bondi accretion rate */
+
+#define BONDI_ACCRETION_CORRECT_ANALYTIC -1   // by using R^-1.5 profile
+#define BONDI_ACCRETION_CORRECT_NUMERICAL -2  // by stepping outwards
 
 /* Type of metal cooling */
 

@@ -43,13 +43,33 @@ int ExposeDataHierarchy(TopGridData *MetaData, HierarchyEntry *Grid,
 		       int &GridID, FLOAT WriteTime, int reset, int ParentID, int level);
 void ExposeGridHierarchy(int NumberOfGrids);
 
+static PyObject *_parameterFindingError;
+
+static PyObject *PyGetEnzoParameter(PyObject *obj, PyObject *args)
+{
+
+    char *parameter_name;
+
+    if (!PyArg_ParseTuple(args, "s", &parameter_name))
+        return PyErr_Format(_parameterFindingError,
+                    "FindBindingEnergy: Invalid parameters.");
+
+    fprintf(stderr, "Looking for %s\n", parameter_name);
+#include "InitializePythonInterface_finderfunctions.inc"
+
+    return Py_None;
+    
+}
+
 static PyMethodDef _EnzoModuleMethods[] = {
+  {"get_parameter", PyGetEnzoParameter, METH_VARARGS},
   {NULL, NULL, 0, NULL}
 };
 
 int InitializePythonInterface(int argc, char *argv[])
 {
 #undef int
+  static int PythonInterpreterInitialized = 0;
   if(PythonInterpreterInitialized == 0){
     Py_SetProgramName("embed_enzo");
     Py_Initialize();

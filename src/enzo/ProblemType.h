@@ -53,6 +53,10 @@ protected:
 
     void FinalizeGrids(HierarchyEntry **RefLevels, HierarchyEntry &TopGrid,
                        TopGridData &MetaData);
+
+    protected:
+
+    private:
 };
 
 /*!
@@ -67,8 +71,10 @@ struct EnzoProblemType_creator
     virtual ~EnzoProblemType_creator() { }
 };
 
+typedef std::map<std::string, EnzoProblemType_creator *> EnzoProblemMap;
+
 //! maps the name of a plug-in to a pointer of the factory pattern 
-std::map<std::string, EnzoProblemType_creator *>& get_problem_types();
+EnzoProblemMap &get_problem_types();
 
 /*!
  * @brief concrete factory pattern for plug-ins

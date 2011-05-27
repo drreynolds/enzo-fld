@@ -133,8 +133,14 @@ EXTERN int CellFlaggingMethod[MAX_FLAGGING_METHODS];
    for CellFlaggingMethod = 10 */
 
 EXTERN FLOAT MustRefineRegionLeftEdge[MAX_DIMENSION];  // left edge
-
 EXTERN FLOAT MustRefineRegionRightEdge[MAX_DIMENSION];  // right edge
+
+/* left and right boundaries of the 'avoid refine region'
+   for CellFlaggingMethod = 101 */
+
+EXTERN int   AvoidRefineRegionLevel[MAX_STATIC_REGIONS];
+EXTERN FLOAT AvoidRefineRegionLeftEdge[MAX_STATIC_REGIONS][MAX_DIMENSION];
+EXTERN FLOAT AvoidRefineRegionRightEdge[MAX_STATIC_REGIONS][MAX_DIMENSION];
 
 /* specifies the level to which FlagCellsToBeRefinedByMustRefineRegion
    will refine up to (does not prevent refinement to higher levels) */
@@ -296,6 +302,7 @@ EXTERN float RootGridCourantSafetyNumber;
 
 EXTERN int RadiativeCooling;
 EXTERN CoolDataType CoolData;
+EXTERN int RadiativeCoolingModel;
 
 /* Cloudy cooling parameters and data. */
 
@@ -309,7 +316,7 @@ EXTERN int GadgetEquilibriumCooling;
 
 EXTERN int     RandomForcing;
 EXTERN FLOAT   RandomForcingEdot;
-EXTERN FLOAT   RandomForcingMachNumber;
+EXTERN FLOAT   RandomForcingMachNumber;  //#####
 EXTERN fpos_t  BaryonFileNamePosition;
 
 /* Multi-species rate equation flag and associated data. */
@@ -359,6 +366,7 @@ EXTERN RadiationFieldDataType RadiationData;
 EXTERN int RadiationFieldLevelRecompute;
 EXTERN int RadiationXRaySecondaryIon;
 EXTERN int RadiationXRayComptonHeating;
+EXTERN int TabulatedLWBackground;
 
 /* Photoelectric cooling turn on/off */
 
@@ -435,7 +443,6 @@ EXTERN float IncrementDensityOutput;
 /* Parameter(s) for embedded python execution */
 EXTERN int PythonTopGridSkip;
 EXTERN int PythonSubcycleSkip;
-EXTERN int PythonInterpreterInitialized;
 
 /* Parameters to control inline halo finding */
 
@@ -620,6 +627,11 @@ EXTERN int MovieVertexCentered;
 EXTERN char *NewMovieName;
 EXTERN int NewMovieDumpNumber;
 EXTERN int NewMovieParticleOn;
+EXTERN FLOAT *StarParticlesOnProcOnLvl_Position[128][3]; 
+EXTERN float *StarParticlesOnProcOnLvl_Velocity[128][3], *StarParticlesOnProcOnLvl_Mass[128];
+EXTERN float *StarParticlesOnProcOnLvl_Attr[128][MAX_NUMBER_OF_PARTICLE_ATTRIBUTES];
+EXTERN int *StarParticlesOnProcOnLvl_Type[128];
+EXTERN PINT *StarParticlesOnProcOnLvl_Number[128];
 
 /* Stanford Hydro Solver variables */
 
@@ -656,6 +668,8 @@ EXTERN float MaximumAlvenSpeed;
 EXTERN int NEQ_HYDRO;
 EXTERN int NEQ_MHD;
 EXTERN int ReconstructionMethod;
+EXTERN int PositiveReconstruction;
+EXTERN int RiemannSolverFallback;
 EXTERN int RiemannSolver;
 EXTERN int ConservativeReconstruction;
 EXTERN int EOSType;
@@ -664,11 +678,13 @@ EXTERN float EOSCriticalDensity;
 EXTERN float EOSGamma;
 EXTERN float C_h;
 EXTERN float C_p;
+EXTERN float DivBDampingLength;
 EXTERN int UseConstantAcceleration;
 EXTERN float ConstantAcceleration[3];
 EXTERN float Mu;
 EXTERN int ExternalGravity;
-EXTERN int StringKick;
+EXTERN float StringKick;
+EXTERN int StringKickDimension;
 EXTERN int UseFloor;
 EXTERN int UseViscosity;
 EXTERN float ViscosityCoefficient;
@@ -874,13 +890,17 @@ EXTERN char current_error[255];
 
 /* Thermal conduction */
 
-EXTERN int Conduction;  // TRUE OR FALSE
+EXTERN int IsotropicConduction;  // TRUE OR FALSE
 EXTERN int AnisotropicConduction;  // TRUE OR FALSE
-EXTERN float ConductionSpitzerFraction;  // f_Spitzer
+EXTERN float IsotropicConductionSpitzerFraction;  // f_Spitzer
+EXTERN float AnisotropicConductionSpitzerFraction;  // f_Spitzer
 EXTERN float ConductionCourantSafetyNumber;
 
-/* Fixed redshift */
+/* For the database */
+EXTERN char *DatabaseLocation;
 
+/* Fixed redshift */
 EXTERN int UseFixedRedshift; // TRUE or FALSE
 EXTERN float FixedRedshift; // just a redshift
+
 #endif

@@ -15,6 +15,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 
 #include "ErrorExceptions.h"
@@ -30,10 +31,9 @@
 
 #include "ProblemType.h"
 
-std::map< std::string, EnzoProblemType_creator *>& 
-get_problem_types()
+EnzoProblemMap& get_problem_types()
 {
-    static std::map< std::string, EnzoProblemType_creator* > problem_type_map;
+    static EnzoProblemMap problem_type_map;
     return problem_type_map;
 }
 
@@ -48,10 +48,9 @@ EnzoProblemType *select_problem_type( std::string problem_type_name)
 
     if( !ept_creator )
     {   
-        std::map<std::string, EnzoProblemType_creator *> mymap =
-            get_problem_types();
+        EnzoProblemMap mymap = get_problem_types();
 
-        for (std::map<std::string, EnzoProblemType_creator *>::const_iterator it 
+        for (EnzoProblemMap::const_iterator it 
                 = mymap.begin(); it != mymap.end(); ++it) {
           std::cout << "Available: " << it->first << std::endl;
         }

@@ -45,6 +45,7 @@ OUTPUT   = out.compile
 ENZO_DIR = .
 MODULES  = 
 VERBOSE  = 0
+ETAGS_COMMAND = "0"
 
 SVN      = hg
 
@@ -104,7 +105,7 @@ include Make.config.objects
 # MAKE ENZO BY DEFAULT
 #-----------------------------------------------------------------------
 
-all: MACHNOTES $(EXE).exe
+all: MACHNOTES MAKETAGS $(EXE).exe
 
 # I believe this has to be done here, as it is target-specific.
 lib: CFLAGS   += $(MACH_SHARED_FLAGS) 
@@ -118,6 +119,13 @@ lib: lib$(EXE)_p$(ASSEMBLE_PARTICLE_NUMBER)_b$(ASSEMBLE_PRECISION_NUMBER).$(MACH
 # MAKE AN EXECUTABLE
 #-----------------------------------------------------------------------
 
+MAKETAGS:
+	@(if [ "$(ETAGS_COMMAND)" != "0" ]; then \
+	   	echo -e "Making Tags with $(ETAGS_COMMAND)" ; \
+		rm -f TAGS ; \
+		$(ETAGS_COMMAND) ; \
+		echo -e "Done updating TAGS" ; \
+	fi)
 MACHNOTES: 
 	@echo -e $(MACHINE_NOTES)
 
@@ -133,6 +141,10 @@ MACHNOTES:
 	@(if [ -e $@ ] ; then  \
 		echo "Success!" ; \
                 if [ ! -e $(TOP_DIR)/bin ]; then mkdir $(TOP_DIR)/bin; fi; \
+		if [ "$(CONFIG_OPT)" == "debug" ]; then \
+		echo "Compiled with opt-debug (OPT_FLAGS = $(ASSEMBLE_OPT_FLAGS))."; \
+		echo "May run much faster while still accurate with make opt-high (OPT_FLAGS = $(MACH_OPT_HIGH))"; \
+		fi; \
                 cp $(EXE).exe $(TOP_DIR)/bin/$(EXE); \
 	else \
 		echo "$(LD) $(LDFLAGS) -o $*.exe $*.o $(OBJS_LIB) $(LIBS)" > temp1; \
@@ -209,6 +221,7 @@ verbose: $(EXE).exe
 #	@$(CPP) $(DEFINES) $(CPPFLAGS) $*.src90 > $*.f90
 .F90.o:
 	@rm -f $@
+	@echo "Compiling $<"
 	@(if [ $(VERBOSE) -eq 0 ]; then \
 	  $(F90) -c -o $@ $(F90FLAGS) $(DEFINES) $*.F90 >& $(OUTPUT) ; \
 	  if [ ! -e $@ ]; then \
@@ -346,7 +359,7 @@ svn_version.def:
 .PHONY: dep
 dep:
 	@echo "Updating DEPEND"
-	-@(makedepend $(DEFINES) $(INCLUDES) -fDEPEND -o.o -m -- -- *.C *.c *.F *.F90 *.h) >& out.make.DEPEND
+	-@(makedepend $(DEFINES) $(INCLUDES) -fDEPEND -o.o -m -- -- */*.C  *.C *.c *.F *.F90 */*.h *.h) >& out.make.DEPEND
 
 include DEPEND
 
@@ -392,7 +405,8 @@ help:
 clean:
 	-@rm -f *.so *.o uuid/*.o *.mod *.f *.f90 DEPEND.bak *~ $(OUTPUT) *.exe \
           auto_show*.C svn_version.def hydro_rk/*.o *.oo hydro_rk/*.oo \
-          uuid/*.oo DEPEND \
+          uuid/*.oo DEPEND TAGS \
+          libconfig/*.o \
           python_bridge/problemtype_handler.C \
           python_bridge/problemtype_handler.h \
           python_bridge/problemtype_handler.o
