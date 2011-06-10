@@ -344,6 +344,7 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   SetUVBAmplitude             = 1.0;
   SetHeIIHeatingScale         = 1.8;
   PhotoelectricHeating	      = 0;
+  PhotoelectricHeatingRate    = 8.5e-26;           // ergs cm-3 s-1
   RadiationXRaySecondaryIon   = 0;
   RadiationXRayComptonHeating = 0;
 
@@ -743,6 +744,10 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
 
   VelAnyl                     = 0;
   BAnyl                     = 0;
+
+  /* Gas drag parameters */
+  UseGasDrag = 0;
+  GasDragCoefficient = 0.;
 
   return SUCCESS;
 }

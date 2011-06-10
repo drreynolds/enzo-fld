@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
+#include <vector>
 
 #ifdef CONFIG_USE_LIBCONFIG
 #include <libconfig.h++>
@@ -462,6 +463,7 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
     ret += sscanf(line, "CoolDataTempXray = %"FSYM, &CoolData.temp_xray);
     ret += sscanf(line, "RateDataCaseBRecombination = %"ISYM, &RateData.CaseBRecombination);
     ret += sscanf(line, "PhotoelectricHeating  = %"ISYM, &PhotoelectricHeating);
+    ret += sscanf(line, "PhotoelectricHeatingRate = %"FSYM, &PhotoelectricHeatingRate);
 
     ret += sscanf(line, "OutputCoolingTime = %"ISYM, &OutputCoolingTime);
     ret += sscanf(line, "OutputTemperature = %"ISYM, &OutputTemperature);
@@ -945,6 +947,10 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
 		  ResetMagneticFieldAmplitude+1,
 		  ResetMagneticFieldAmplitude+2);
 
+    ret += sscanf(line, "UseGasDrag = %"ISYM, &UseGasDrag);
+    ret += sscanf(line, "GasDragCoefficient = %"GSYM, &GasDragCoefficient);
+
+
     /* If the dummy char space was used, then make another. */
  
     if (*dummy != 0) {
@@ -1003,8 +1009,8 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
 #ifdef TRANSFER
     if (strstr(line, "Radiative")           ) ret++;
     if (strstr(line, "PhotonTest")          ) ret++;
-
 #endif
+    if (strstr(line, "MHDDRF")              ) ret++;
 
     if (strstr(line, "\"\"\"")              ) comment_count++;
 
@@ -1056,6 +1062,16 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
 
   if (HydroMethod != MHD_RK)
     BAnyl = 0; // set this to zero no matter what unless we have a magnetic field to analyze.
+
+  if ((HydroMethod != MHD_RK) && (UseGasDrag != 0))
+    {
+      if(MyProcessorNumber == ROOT_PROCESSOR ) {
+	fprintf(stderr, "WARNING:  UseGasDrag != 0 yet HM=MHD_RK \n");
+	fprintf(stderr, "WARNING:  setting UseGasDrag = 0. I.e no Gas drag included. \n");
+	UseGasDrag = 0; 
+      }
+    }
+
 
   /* Count static nested grids since this isn't written in the
      parameter file */

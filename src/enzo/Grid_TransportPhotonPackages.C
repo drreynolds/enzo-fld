@@ -251,7 +251,7 @@ int grid::TransportPhotonPackages(int level, ListOfPhotonsToMove **PhotonsToMove
 
   } // ENDWHILE photons
 
-  if (DEBUG)
+  if (debug1)
     fprintf(stdout, "grid::TransportPhotonPackage: "
 	    "transported %"ISYM" deleted %"ISYM" paused %"ISYM" moved %"ISYM"\n",
 	    tcount, dcount, pcount, trcount);
