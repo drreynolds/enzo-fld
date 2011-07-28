@@ -156,7 +156,9 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
 		  &MetaData.OutputFirstTimeAtLevel);
     ret += sscanf(line, "StopFirstTimeAtLevel = %"ISYM,
 		  &MetaData.StopFirstTimeAtLevel);
- 
+    ret += sscanf(line, "NumberOfOutputsBeforeExit = %"ISYM,
+		  &MetaData.NumberOfOutputsBeforeExit);
+
     /* Maximum density directed output */
     ret += sscanf(line, "OutputOnDensity = %"ISYM,
            &OutputOnDensity);
@@ -433,12 +435,12 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
       ret++;
     }
 
-    ret += sscanf(line, "CRModel = %"ISYM, &CRModel);
     ret += sscanf(line, "ShockMethod = %"ISYM, &ShockMethod);
     ret += sscanf(line, "ShockTemperatureFloor = %"FSYM, &ShockTemperatureFloor);
     ret += sscanf(line, "StorePreShockFields = %"ISYM, &StorePreShockFields);
 
     ret += sscanf(line, "RadiationFieldType = %"ISYM, &RadiationFieldType);
+    ret += sscanf(line, "RadiationFieldRedshift = %"FSYM, &RadiationFieldRedshift);
     ret += sscanf(line, "TabulatedLWBackground = %"ISYM, &TabulatedLWBackground);
     ret += sscanf(line, "AdjustUVBackground = %"ISYM, &AdjustUVBackground);
     ret += sscanf(line, "SetUVBAmplitude = %"FSYM, &SetUVBAmplitude);
@@ -643,7 +645,7 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
                  &ShockwaveRefinementMinMach);
     ret += sscanf(line, "ShockwaveRefinementMinVelocity = %"FSYM,
                  &ShockwaveRefinementMinVelocity);
-    ret += sscanf(line, "ShockwaveRefinementMaxLevel = %"FSYM,
+    ret += sscanf(line, "ShockwaveRefinementMaxLevel = %"ISYM,
                  &ShockwaveRefinementMaxLevel);
     ret += sscanf(line, "ComovingCoordinates = %"ISYM,&ComovingCoordinates);
     ret += sscanf(line, "StarParticleCreation = %"ISYM, &StarParticleCreation);
@@ -1223,14 +1225,6 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
     }
   }
 
-  /* If set, initialze Cosmic Ray Efficiency Models */
-
-  if (CRModel){
-    if (InitializeCosmicRayData() == FAIL){
-      ENZO_FAIL("Error in Initialize CosmicRayData.");
-    }
-  }
-
   /* If using the internal radiation field, initialize it. */
  
   if (RadiationFieldType == 11) 
@@ -1494,6 +1488,9 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
   if (WritePotential && SelfGravity) {
     CopyGravPotential = TRUE;
   }
+
+  // Keep track of number of outputs left until exit.
+  MetaData.OutputsLeftBeforeExit = MetaData.NumberOfOutputsBeforeExit;
 
   if (MyProcessorNumber == ROOT_PROCESSOR) {
  

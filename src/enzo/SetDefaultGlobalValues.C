@@ -98,6 +98,9 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   MetaData.OutputFirstTimeAtLevel = 0; // zero is off
   MetaData.StopFirstTimeAtLevel   = 0; // zero is off
  
+  MetaData.NumberOfOutputsBeforeExit = 0;
+  MetaData.OutputsLeftBeforeExit     = 0;
+
   MetaData.RestartDumpNumber   = 0;            // starting restart id number
   MetaData.RestartDumpName     = DefaultRestartName;
   MetaData.RestartDumpDir      = DefaultRestartDir;
@@ -332,11 +335,11 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   GloverChemistryModel        = 0;                 // 0ff
   GloverRadiationBackground   = 0;
   GloverOpticalDepth          = 0;
-  CRModel                     = 0;                 // off
-  ShockMethod                 = 0;                 // temperature unsplit
+  ShockMethod                 = 0;                 // off
   ShockTemperatureFloor       = 1.0;               // Set to 1K
   StorePreShockFields         = 0;
   RadiationFieldType          = 0;
+  RadiationFieldRedshift      = 0.0;
   TabulatedLWBackground       = 0;
   RadiationFieldLevelRecompute = 0;
   RadiationData.RadiationShield = 0;
