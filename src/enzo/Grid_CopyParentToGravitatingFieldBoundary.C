@@ -45,7 +45,7 @@ extern "C" void FORTRAN_NAME(prolong)(float *source, float *dest, int *ndim,
  
 int grid::CopyParentToGravitatingFieldBoundary(grid *ParentGrid)
 {
- 
+  //  return SUCCESS;
   /* If this doesn't concern us, return. */
  
   if (this->CommunicationMethodShouldExit(ParentGrid))
@@ -78,12 +78,12 @@ int grid::CopyParentToGravitatingFieldBoundary(grid *ParentGrid)
      the region dim (in parent units). */
  
   for (dim = 0; dim < GridRank; dim++) {
-    SubGridExtra[dim] = nint((GridLeftEdge[dim] -
-   			      GravitatingMassFieldLeftEdge[dim])
+    // SubGridExtra[dim] = nint((GridLeftEdge[dim] -
+    // 			      GravitatingMassFieldLeftEdge[dim])
+    // 			     /GravitatingMassFieldCellSize);
+       SubGridExtra[dim] = nint((CellLeftEdge[dim][0] -
+    			      GravitatingMassFieldLeftEdge[dim])
     			     /GravitatingMassFieldCellSize);
-    //    SubGridExtra[dim] = nint((CellLeftEdge[dim][0] -
-    //			      GravitatingMassFieldLeftEdge[dim])
-    //			     /GravitatingMassFieldCellSize);
     ParentOffset[dim] = nint((GravitatingMassFieldLeftEdge[dim] -
 		  ParentGrid->GravitatingMassFieldLeftEdge[dim])/
 			     GravitatingMassFieldCellSize);
@@ -195,7 +195,6 @@ int grid::CopyParentToGravitatingFieldBoundary(grid *ParentGrid)
 	                GravitatingMassFieldDimension[0]
 	           + SubGridExtra[0];
       //      if (j == GravitatingMassFieldDimension[1]/2 &&
-
       //	  k == GravitatingMassFieldDimension[2]/2)
       //	for (i = 0; i < GravitatingMassFieldDimension[0]; i++)
       //	  printf("%"ISYM" %"GSYM"\n", i,

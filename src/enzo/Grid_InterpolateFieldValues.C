@@ -90,7 +90,6 @@ int grid::InterpolateFieldValues(grid *ParentGrid)
   float *TemporaryField, *TemporaryDensityField, *Work,
         *ParentTemp[MAX_NUMBER_OF_BARYON_FIELDS], *FieldPointer;
  
-  int MyInterpolationMethod = InterpolationMethod;   
   if (NumberOfBaryonFields > 0) {
 
     interp_error = FALSE;
@@ -217,7 +216,7 @@ int grid::InterpolateFieldValues(grid *ParentGrid)
  
     if (ProcessorNumber != ParentGrid->ProcessorNumber) {
       ParentGrid->CommunicationSendRegion(ParentGrid, ProcessorNumber,
-			ALL_FIELDS, NEW_ONLY, ParentStartIndex, ParentTempDim);
+					  ALL_FIELDS, NEW_ONLY, ParentStartIndex, ParentTempDim);
       for (dim = 0; dim < GridRank; dim++) {
 	ParentDim[dim] = ParentTempDim[dim];
 	ParentStartIndex[dim] = 0;
@@ -242,12 +241,13 @@ int grid::InterpolateFieldValues(grid *ParentGrid)
  
     //    if (HydroMethod != Zeus_Hydro)
       for (field = 0; field < NumberOfBaryonFields; field++)
-	FORTRAN_NAME(copy3d)(ParentGrid->BaryonField[field], ParentTemp[field],
-			     ParentDim, ParentDim+1, ParentDim+2,
-			     ParentTempDim, ParentTempDim+1, ParentTempDim+2,
-			     &Zero, &Zero, &Zero,
-			     ParentStartIndex, ParentStartIndex+1,
-			     ParentStartIndex+2);
+	  FORTRAN_NAME(copy3d)(ParentGrid->BaryonField[field], ParentTemp[field],
+			       ParentDim, ParentDim+1, ParentDim+2,
+			       ParentTempDim, ParentTempDim+1, ParentTempDim+2,
+			       &Zero, &Zero, &Zero,
+			       ParentStartIndex, ParentStartIndex+1,
+			       ParentStartIndex+2);
+
 /*
     if (HydroMethod == Zeus_Hydro)
       for (field = 0; field < NumberOfBaryonFields; field++) {
@@ -278,8 +278,10 @@ int grid::InterpolateFieldValues(grid *ParentGrid)
 	    FieldType[field] != PhiField &&
 	    FieldType[field] != DrivingField1 &&
 	    FieldType[field] != DrivingField2 &&
-	    FieldType[field] != DrivingField3 &&
-	    FieldType[field] != GravPotential)
+	    FieldType[field] != DrivingField3 
+	    && FieldType[field] != DebugField 
+	    && FieldType[field] != GravPotential
+	    )
 	  FORTRAN_NAME(mult3d)(ParentTemp[densfield], ParentTemp[field],
                                &ParentTempSize, &One, &One,
 			       &ParentTempSize, &One, &One,
@@ -328,20 +330,14 @@ int grid::InterpolateFieldValues(grid *ParentGrid)
        is done for the entire current grid, not just it's boundaries.
        (skip density since we did it already) */
  
-      if (FieldTypeNoInterpolate(FieldType[field]) == FALSE){
-        if (HydroMethod == Zeus_Hydro){
-	        InterpolationMethod = (SecondOrderBFlag[field] == 0) ?
-	            SecondOrderA : SecondOrderC;
-        }
-      } else {
-        /* Use nearest grid point interpolation for fields that 
-           shouldn't ever be averaged. */ 
-        MyInterpolationMethod = FirstOrderA; 
+      if (HydroMethod == Zeus_Hydro){
+	InterpolationMethod = (SecondOrderBFlag[field] == 0) ?
+	  SecondOrderA : SecondOrderC;
       }
       //      fprintf(stdout, "grid:: InterpolateBoundaryFromParent[4], field = %d\n", field); 
 
-      //      if (FieldType[field] != Density && FieldType[field] != DebugField) {
-      if (FieldType[field] != Density) {
+      if (FieldType[field] != Density && FieldType[field] != DebugField) {
+	//      if (FieldType[field] != Density) {
 	FORTRAN_NAME(interpolate)(&GridRank,
 				  ParentTemp[field], ParentTempDim,
 				  ParentTempStartIndex, ParentTempEndIndex,
@@ -380,8 +376,10 @@ int grid::InterpolateFieldValues(grid *ParentGrid)
 	    FieldType[field] != PhiField &&
 	    FieldType[field] != DrivingField1 &&
 	    FieldType[field] != DrivingField2 &&
-	    FieldType[field] != DrivingField3 &&
-	    FieldType[field] != GravPotential)
+	    FieldType[field] != DrivingField3 
+	    && FieldType[field] != DebugField 
+	    &&  FieldType[field] != GravPotential
+	    )
 	  FORTRAN_NAME(div3d)(TemporaryDensityField, TemporaryField,
 			      &TempSize, &One, &One,
 			      &TempSize, &One, &One,

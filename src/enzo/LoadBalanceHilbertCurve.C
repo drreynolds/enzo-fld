@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <algorithm>
 #include "ErrorExceptions.h"
 #include "macros_and_parameters.h"
 #include "typedefs.h"
@@ -32,6 +33,7 @@
 #include "LevelHierarchy.h"
 #include "communication.h"
 #include "CommunicationUtilities.h"
+#include "SortCompareFunctions.h"
 
 double HilbertCurve3D(FLOAT *coord);
 Eint32 compare_hkey(const void *a, const void *b);
@@ -118,7 +120,8 @@ int LoadBalanceHilbertCurve(HierarchyEntry *GridHierarchyPointer[],
   /* Sort the grids along the curve and partition it into pieces with
      equal amounts of work. */
 
-  qsort(HilbertData, NumberOfGrids, sizeof(hilbert_data), compare_hkey);
+  //qsort(HilbertData, NumberOfGrids, sizeof(hilbert_data), compare_hkey);
+  std::sort(HilbertData, HilbertData+NumberOfGrids, cmp_hkey());
   TotalWork = 0;
   for (i = 0; i < NumberOfGrids; i++) {
     GridHierarchyPointer[HilbertData[i].grid_num]->GridData->
@@ -410,7 +413,8 @@ int LoadBalanceHilbertCurve(grid *GridPointers[], int NumberOfGrids,
   /* Sort the grids along the curve and partition it into pieces with
      equal amounts of work. */
 
-  qsort(HilbertData, NumberOfGrids, sizeof(hilbert_data), compare_hkey);
+  //qsort(HilbertData, NumberOfGrids, sizeof(hilbert_data), compare_hkey);
+  std::sort(HilbertData, HilbertData+NumberOfGrids, cmp_hkey());
   TotalWork = 0;
   for (i = 0; i < NumberOfGrids; i++) {
     GridPointers[HilbertData[i].grid_num]->
@@ -646,7 +650,8 @@ int LoadBalanceHilbertCurve(grid *GridPointers[], int NumberOfGrids,
   /* Sort the grids along the curve and partition it into pieces with
      equal amounts of work. */
 
-  qsort(HilbertData, NumberOfGrids, sizeof(hilbert_data), compare_hkey);
+  //qsort(HilbertData, NumberOfGrids, sizeof(hilbert_data), compare_hkey);
+  std::sort(HilbertData, HilbertData+NumberOfGrids, cmp_hkey());
   TotalWork = 0;
   for (i = 0; i < NumberOfGrids; i++) {
 //    GridPointers[HilbertData[i].grid_num]->
@@ -735,6 +740,7 @@ int LoadBalanceHilbertCurve(grid *GridPointers[], int NumberOfGrids,
   int LoadedBlock, UnloadedBlock;
   float WorkDifference, MinWork, MaxWork, WorkImbalance;
 
+#ifdef UNUSED
   for (iter = 0; iter < FUZZY_ITERATIONS; iter++) {
     MinWork = 0x7FFFFFFF;
     MaxWork = -1;
@@ -798,6 +804,7 @@ int LoadBalanceHilbertCurve(grid *GridPointers[], int NumberOfGrids,
       break;
 
   } // ENDFOR iterations
+#endif /* UNUSED */
 
 #ifdef UNUSED
   float *ww = new float[NumberOfProcessors];

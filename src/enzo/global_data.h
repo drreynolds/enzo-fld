@@ -133,8 +133,14 @@ EXTERN int CellFlaggingMethod[MAX_FLAGGING_METHODS];
    for CellFlaggingMethod = 10 */
 
 EXTERN FLOAT MustRefineRegionLeftEdge[MAX_DIMENSION];  // left edge
-
 EXTERN FLOAT MustRefineRegionRightEdge[MAX_DIMENSION];  // right edge
+
+/* left and right boundaries of the 'avoid refine region'
+   for CellFlaggingMethod = 101 */
+
+EXTERN int   AvoidRefineRegionLevel[MAX_STATIC_REGIONS];
+EXTERN FLOAT AvoidRefineRegionLeftEdge[MAX_STATIC_REGIONS][MAX_DIMENSION];
+EXTERN FLOAT AvoidRefineRegionRightEdge[MAX_STATIC_REGIONS][MAX_DIMENSION];
 
 /* specifies the level to which FlagCellsToBeRefinedByMustRefineRegion
    will refine up to (does not prevent refinement to higher levels) */
@@ -310,7 +316,7 @@ EXTERN int GadgetEquilibriumCooling;
 
 EXTERN int     RandomForcing;
 EXTERN FLOAT   RandomForcingEdot;
-EXTERN FLOAT   RandomForcingMachNumber;
+EXTERN FLOAT   RandomForcingMachNumber;  //#####
 EXTERN fpos_t  BaryonFileNamePosition;
 
 /* Multi-species rate equation flag and associated data. */
@@ -329,21 +335,14 @@ EXTERN int GloverOpticalDepth; // 0: opticaly thin, 1: single-cell
 
 EXTERN int MultiMetals;
 
-/* Cosmic Ray Model 
+/* Shock Finding Method
  * 0: Off - default
- * 1: On, Let CRs accululate on Grid
- * 2: On, Zero out CRs each step to only look at instantaneous acceleration
- * 3: Highly experimental, takes energy out of gas.  Unstable.
- */
-EXTERN int CRModel; 
-/* Shock Finding Method: Always on when CRModel nonzero
- * 0: temperature unsplit - default
- * 1: temperature split 
- * 2: velocity unsplit
- * 3: velocity split
+ * 1: temperature unsplit 
+ * 2: temperature split 
+ * 3: velocity unsplit
+ * 4: velocity split
  */
 EXTERN int ShockMethod; 
-EXTERN CosmicRayDataType CosmicRayData;
 EXTERN float ShockTemperatureFloor;
 EXTERN int StorePreShockFields;
 
@@ -361,10 +360,12 @@ EXTERN int RadiationFieldLevelRecompute;
 EXTERN int RadiationXRaySecondaryIon;
 EXTERN int RadiationXRayComptonHeating;
 EXTERN int TabulatedLWBackground;
+EXTERN float RadiationFieldRedshift;
 
 /* Photoelectric cooling turn on/off */
 
 EXTERN int PhotoelectricHeating;
+EXTERN float PhotoelectricHeatingRate;
 
 /* Output cooling time with grid data. */
 
@@ -520,7 +521,7 @@ EXTERN float RefineByResistiveLengthSafetyFactor;
 
 EXTERN float ShockwaveRefinementMinMach;
 EXTERN float ShockwaveRefinementMinVelocity;
-EXTERN float ShockwaveRefinementMaxLevel;
+EXTERN int ShockwaveRefinementMaxLevel;
 
 /* Noh problem switch: Upper-Right quadrant or full domain */
 
@@ -621,6 +622,11 @@ EXTERN int MovieVertexCentered;
 EXTERN char *NewMovieName;
 EXTERN int NewMovieDumpNumber;
 EXTERN int NewMovieParticleOn;
+EXTERN FLOAT *StarParticlesOnProcOnLvl_Position[128][3]; 
+EXTERN float *StarParticlesOnProcOnLvl_Velocity[128][3], *StarParticlesOnProcOnLvl_Mass[128];
+EXTERN float *StarParticlesOnProcOnLvl_Attr[128][MAX_NUMBER_OF_PARTICLE_ATTRIBUTES];
+EXTERN int *StarParticlesOnProcOnLvl_Type[128];
+EXTERN PINT *StarParticlesOnProcOnLvl_Number[128];
 
 /* Stanford Hydro Solver variables */
 
@@ -877,13 +883,21 @@ EXTERN int OutputWhenJetsHaveNotEjected;
 EXTERN int VelAnyl;
 EXTERN int BAnyl;
 
+/* Gas drag */
+EXTERN int UseGasDrag;
+EXTERN float GasDragCoefficient;
+
 EXTERN char current_error[255];
 
 /* Thermal conduction */
 
-EXTERN int Conduction;  // TRUE OR FALSE
+EXTERN int IsotropicConduction;  // TRUE OR FALSE
 EXTERN int AnisotropicConduction;  // TRUE OR FALSE
-EXTERN float ConductionSpitzerFraction;  // f_Spitzer
+EXTERN float IsotropicConductionSpitzerFraction;  // f_Spitzer
+EXTERN float AnisotropicConductionSpitzerFraction;  // f_Spitzer
 EXTERN float ConductionCourantSafetyNumber;
+
+/* For the database */
+EXTERN char *DatabaseLocation;
 
 #endif

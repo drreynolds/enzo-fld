@@ -38,7 +38,7 @@
 /                Cleaned up error handling and created new routines for
 /                computing the timestep, output, handling fluxes
 /  modified10: July, 2009 by Sam Skillman
-/                Added shock and cosmic ray analysis
+/                Added shock analysis
 /
 /  PURPOSE:
 /    This routine is the main grid evolution function.  It assumes that the
@@ -396,7 +396,7 @@ int EvolveLevel(TopGridData *MetaData, LevelHierarchyEntry *LevelArray[],
     /* Prepare the density field (including particle density). */
 
     When = 0.5;
- 
+
 #ifdef FAST_SIB
      PrepareDensityField(LevelArray, SiblingList, level, MetaData, When);
 #else   // !FAST_SIB
@@ -427,6 +427,7 @@ int EvolveLevel(TopGridData *MetaData, LevelHierarchyEntry *LevelArray[],
 	  if (level > 0)
 	    Grids[grid1]->GridData->SolveForPotential(level);
 	  Grids[grid1]->GridData->ComputeAccelerations(level);
+	  Grids[grid1]->GridData->CopyPotentialToBaryonField();
 	}
 	  /* otherwise, interpolate potential from coarser grid, which is
 	     now done in PrepareDensity. */
@@ -499,22 +500,16 @@ int EvolveLevel(TopGridData *MetaData, LevelHierarchyEntry *LevelArray[],
       /* Include 'star' particle creation and feedback. */
 
       Grids[grid1]->GridData->StarParticleHandler
-	(Grids[grid1]->NextGridNextLevel, level
-#ifdef EMISSIVITY
-	/* adding the changed StarParticleHandler prototype */
-							,dtLevelAbove
-#endif
-        );
+	(Grids[grid1]->NextGridNextLevel, level ,dtLevelAbove);
 
-      /* Include shock-finding and cosmic ray acceleration */
+      /* Include shock-finding */
 
       Grids[grid1]->GridData->ShocksHandler();
 
       /* Compute and apply thermal conduction. */
-      if(Conduction){
+      if(IsotropicConduction || AnisotropicConduction){
 	if(Grids[grid1]->GridData->ConductHeat() == FAIL){
-	  fprintf(stderr, "Error in grid->ConductHeat.\n");
-	  return FAIL;
+	  ENZO_FAIL("Error in grid->ConductHeat.\n");
 	}
       }
 
@@ -556,33 +551,6 @@ int EvolveLevel(TopGridData *MetaData, LevelHierarchyEntry *LevelArray[],
 
     /* If cosmology, then compute grav. potential for output if needed. */
 
-    //dcc cut second potential cut: Duplicate?
- 
-    if (SelfGravity && WritePotential) {
-      CopyGravPotential = TRUE;
-      When = 0.0;
- 
-#ifdef FAST_SIB
-      PrepareDensityField(LevelArray, SiblingList, level, MetaData, When);
-#else   // !FAST_SIB
-      PrepareDensityField(LevelArray, level, MetaData, When);
-#endif  // end FAST_SIB
- 
- 
-      for (grid1 = 0; grid1 < NumberOfGrids; grid1++) {
-        if (level <= MaximumGravityRefinementLevel) {
- 
-          /* Compute the potential. */
- 
-          if (level > 0)
-            Grids[grid1]->GridData->SolveForPotential(level);
-          Grids[grid1]->GridData->CopyPotentialToBaryonField();
-        }
-      } //  end loop over grids
-      CopyGravPotential = FALSE;
-
-    } // if WritePotential
- 
 
     /* For each grid, delete the GravitatingMassFieldParticles. */
  
@@ -682,6 +650,34 @@ int EvolveLevel(TopGridData *MetaData, LevelHierarchyEntry *LevelArray[],
     /* Recompute radiation field, if requested. */
     RadiationFieldUpdate(LevelArray, level, MetaData);
  
+//     //dcc cut second potential cut: Duplicate?
+ 
+//     if (SelfGravity && WritePotential) {
+//       CopyGravPotential = TRUE;
+//       When = 0.0;
+ 
+// #ifdef FAST_SIB
+//       PrepareDensityField(LevelArray, SiblingList, level, MetaData, When);
+// #else   // !FAST_SIB
+//       PrepareDensityField(LevelArray, level, MetaData, When);
+// #endif  // end FAST_SIB
+ 
+ 
+//       for (grid1 = 0; grid1 < NumberOfGrids; grid1++) {
+//         if (level <= MaximumGravityRefinementLevel) {
+ 
+//           /* Compute the potential. */
+ 
+//           if (level > 0)
+//             Grids[grid1]->GridData->SolveForPotential(level);
+//           Grids[grid1]->GridData->CopyPotentialToBaryonField();
+//         }
+//       } //  end loop over grids
+//        CopyGravPotential = FALSE;
+
+//     } // if WritePotential
+ 
+
     /* Rebuild the Grids on the next level down.
        Don't bother on the last cycle, as we'll rebuild this grid soon. */
  

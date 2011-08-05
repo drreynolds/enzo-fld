@@ -71,6 +71,7 @@ float grid::ComputeTimeStep()
   float dtAcceleration = huge_number;
   float dtMHD          = huge_number;
   float dtConduction   = huge_number;
+  float dtGasDrag      = huge_number;
   int dim, i, result;
  
   /* Compute the field size. */
@@ -110,15 +111,7 @@ float grid::ComputeTimeStep()
     /* Compute the pressure. */
  
     float *pressure_field = new float[size];
-    if (DualEnergyFormalism)
-      result = this->ComputePressureDualEnergyFormalism(Time, pressure_field);
-    else
-      result = this->ComputePressure(Time, pressure_field);
- 
-    if (result == FAIL) {
-      fprintf(stderr, "Error in grid->ComputePressure.\n");
-      exit(EXIT_FAILURE);
-    }
+    this->ComputePressure(Time, pressure_field);
  
 #ifdef UNUSED
     int Zero[3] = {0,0,0}, TempInt[3] = {0,0,0};
@@ -244,13 +237,13 @@ float grid::ComputeTimeStep()
 	  By  = BaryonField[B2Num][n];
 	  Bz  = BaryonField[B3Num][n];
 
+          B2 = Bx*Bx + By*By + Bz*Bz;
 	  if (DualEnergyFormalism) {
 	    eint = BaryonField[GENum][n];
 	  }
 	  else {
 	    etot = BaryonField[TENum][n];
 	    v2 = vx*vx + vy*vy + vz*vz;
-	    B2 = Bx*Bx + By*By + Bz*Bz;
 	    eint = etot - 0.5*v2 - 0.5*B2/rho;
 	  }
 
@@ -352,7 +345,7 @@ float grid::ComputeTimeStep()
 
   /* 5) Calculate minimum dt due to thermal conduction. */
 
-  if(Conduction){
+  if(IsotropicConduction || AnisotropicConduction){
     if (this->ComputeConductionTimeStep(dtConduction) == FAIL) {
       fprintf(stderr, "Error in ComputeConductionTimeStep.\n");
       return FAIL;
@@ -361,7 +354,13 @@ float grid::ComputeTimeStep()
     dtConduction *= float(DEFAULT_GHOST_ZONES);     // for subcycling 
   }
 
-  /* 6) calculate minimum timestep */
+  /* 6) GasDrag time step */
+  if (UseGasDrag && GasDragCoefficient != 0.) {
+    dtGasDrag = 0.5/GasDragCoefficient;
+  }
+
+
+  /* 7) calculate minimum timestep */
  
   dt = min(dtBaryons, dtParticles);
   dt = min(dt, dtMHD);
@@ -369,10 +368,11 @@ float grid::ComputeTimeStep()
   dt = min(dt, dtAcceleration);
   dt = min(dt, dtExpansion);
   dt = min(dt, dtConduction);
+  dt = min(dt, dtGasDrag);
 
 #ifdef TRANSFER
 
-  /* 6) If star formation, set a minimum timestep */
+  /* 8) If star formation, set a minimum timestep */
 
   float TemperatureUnits, DensityUnits, LengthUnits, 
     VelocityUnits, TimeUnits, aUnits = 1;
@@ -401,7 +401,7 @@ float grid::ComputeTimeStep()
 
 
 
-  /* 7) If using radiation pressure, calculate minimum dt */
+  /* 9) If using radiation pressure, calculate minimum dt */
 
   float dtRadPressure = huge_number;
   float absVel, absAccel;
@@ -428,7 +428,7 @@ float grid::ComputeTimeStep()
 
   } /* ENDIF RadiationPressure */
 
-  /* 8) Safety Velocity to limit timesteps */
+  /* 10) Safety Velocity to limit timesteps */
 
   float dtSafetyVelocity = huge_number;
   if (TimestepSafetyVelocity > 0)
@@ -460,8 +460,10 @@ float grid::ComputeTimeStep()
       printf("Acc = %"FSYM" ", dtAcceleration);
     if (NumberOfParticles)
       printf("Part = %"FSYM" ", dtParticles);
-    if (Conduction)
+    if (IsotropicConduction || AnisotropicConduction)
       printf("Cond = %"ESYM" ",(dtConduction));
+    if (UseGasDrag)
+      printf("Drag = %"ESYM" ",(dtGasDrag));
     printf(")\n");
   }
  

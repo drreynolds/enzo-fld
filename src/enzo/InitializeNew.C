@@ -44,7 +44,7 @@ int InitializeMovieFile(TopGridData &MetaData, HierarchyEntry &TopGrid);
 int WriteHierarchyStuff(FILE *fptr, HierarchyEntry *Grid,
                         char* base_name, int &GridID, FLOAT WriteTime);
 int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt);
-int WriteParameterFile(FILE *fptr, TopGridData &MetaData);
+int WriteParameterFile(FILE *fptr, TopGridData &MetaData, char *Filename=NULL);
 void ConvertTotalEnergyToGasEnergy(HierarchyEntry *Grid);
 int SetDefaultGlobalValues(TopGridData &MetaData);
 int CommunicationPartitionGrid(HierarchyEntry *Grid, int gridnum);
@@ -71,6 +71,8 @@ int ConductionTestInitialize(FILE *fptr, FILE *Outfptr, HierarchyEntry &TopGrid,
 int ConductionBubbleInitialize(FILE *fptr, FILE *Outfptr, HierarchyEntry &TopGrid,
 			     TopGridData &MetaData);
 int ConductionCloudInitialize(FILE *fptr, FILE *Outfptr, HierarchyEntry &TopGrid,
+			     TopGridData &MetaData);
+int StratifiedMediumExplosionInitialize(FILE *fptr, FILE *Outfptr, HierarchyEntry &TopGrid,
 			     TopGridData &MetaData);
 int KHInitialize(FILE *fptr, FILE *Outfptr, HierarchyEntry &TopGrid,
                           TopGridData &MetaData);
@@ -191,6 +193,8 @@ int Collapse1DInitialize(FILE *fptr, FILE *Outfptr,
 			 HierarchyEntry &TopGrid, TopGridData &MetaData);
 int MHD1DTestInitialize(FILE *fptr, FILE *Outfptr,
                         HierarchyEntry &TopGrid, TopGridData &MetaData);
+int MHD1DTestWavesInitialize(FILE *fptr, FILE *Outfptr,
+                        HierarchyEntry &TopGrid, TopGridData &MetaData);
 int MHD2DTestInitialize(FILE *fptr, FILE *Outfptr,
                         HierarchyEntry &TopGrid, TopGridData &MetaData);
 int MHD3DTestInitialize(FILE *fptr, FILE *Outfptr, 
@@ -198,6 +202,8 @@ int MHD3DTestInitialize(FILE *fptr, FILE *Outfptr,
 int CollapseMHD3DInitialize(FILE *fptr, FILE *Outfptr, 
 			    HierarchyEntry &TopGrid, TopGridData &MetaData, int SetBaryonFields);
 int MHDTurbulenceInitialize(FILE *fptr, FILE *Outfptr, 
+			    HierarchyEntry &TopGrid, TopGridData &MetaData, int SetBaryonFields);
+int MHDDecayingRandomFieldInitialize(FILE *fptr, FILE *Outfptr, 
 			    HierarchyEntry &TopGrid, TopGridData &MetaData, int SetBaryonFields);
 int GalaxyDiskInitialize(FILE *fptr, FILE *Outfptr, 
 			 HierarchyEntry &TopGrid, TopGridData &MetaData);
@@ -339,6 +345,9 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
     
   } // end: if (ProblemType != 40 && ProblemType !=51)
   
+
+
+
   // Call problem initializer
 
   PrintMemoryUsage("Call problem init");
@@ -535,6 +544,11 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
   // 73) Conducting cloud test problem
   if (ProblemType == 73)
     ret = ConductionCloudInitialize(fptr, Outfptr, TopGrid, MetaData);  
+
+  // 80) Explosion in a stratified medium
+  if (ProblemType == 80)
+    ret = StratifiedMediumExplosionInitialize(fptr, Outfptr, TopGrid, MetaData);  
+
   
   /* 101) 3D Collapse */
   if (ProblemType == 101) {
@@ -592,6 +606,17 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
   if (ProblemType == 208) {
     ret = AGNDiskInitialize(fptr, Outfptr, TopGrid, MetaData);
   }
+
+  /* 209) MHD 1D Waves */
+  if (ProblemType == 209) {
+    ret = MHD1DTestWavesInitialize(fptr, Outfptr, TopGrid, MetaData);
+  }
+
+  /* 210) MHD Decaying random magnetic fields */
+  if (ProblemType == 210) {
+    ret = MHDDecayingRandomFieldInitialize(fptr, Outfptr, TopGrid, MetaData, 0);
+  }
+
 
   /* ???? */
   if (ProblemType ==300) {
@@ -664,8 +689,10 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
  
   /* Do some error checking */
  
-  if (MetaData.StopTime == FLOAT_UNDEFINED)
-    ENZO_FAIL("StopTime never set.");
+  if (MetaData.StopTime == FLOAT_UNDEFINED && MetaData.StopCycle == INT_UNDEFINED)
+    ENZO_FAIL("StopTime nor StopCycle ever set.");
+  if (MetaData.StopCycle != INT_UNDEFINED && MetaData.StopTime == FLOAT_UNDEFINED)
+    MetaData.StopTime = huge_number;
 
   int nFields = TopGrid.GridData->ReturnNumberOfBaryonFields();
   if (nFields >= MAX_NUMBER_OF_BARYON_FIELDS) {
@@ -675,8 +702,8 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
   }
 
   PrintMemoryUsage("1st Initialization done");
-  
-  
+
+
   if (debug)
     printf("Initialize Exterior\n");
   
@@ -746,6 +773,7 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
     fprintf(stderr, "End of set exterior\n");
   }
   
+
   // Set values that were left undefined (above)
   
   if (MetaData.TimeLastDataDump == FLOAT_UNDEFINED)
@@ -898,7 +926,7 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
     if (ProblemType == 202)
     CollapseMHD3DInitialize(fptr, Outfptr, TopGrid, MetaData, 1);
 
-  // For ProblemType 203 (Turbulence Simulation we only initialize the data
+  // For ProblemType 203 (MHD Turbulence Simulation we only initialize the data
   // once the topgrid has been split.
   if (ProblemType == 203)
     if (MHDTurbulenceInitialize(fptr, Outfptr, TopGrid, MetaData, 1)
@@ -906,6 +934,13 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
       ENZO_FAIL("Error in MHDTurbulenceReInitialize.\n");
     }
   
+  // initialize the data once the topgrid has been split.
+  if (ProblemType == 210)
+    if (MHDDecayingRandomFieldInitialize(fptr, Outfptr, TopGrid, MetaData, 1)
+	== FAIL) {
+      ENZO_FAIL("Error in MHDDecayingRandomField ReInitialize.\n");
+    }
+
   CommunicationBarrier();
  
   // Close parameter files

@@ -185,6 +185,7 @@ extern "C" void FORTRAN_NAME(star_feedback2)(int *nx, int *ny, int *nz,
 		       float *r, float *dx, FLOAT *t, float *z,
              float *d1, float *x1, float *v1, float *t1,
                        float *sn_param, float *m_eject, float *yield,
+	     int *distrad, int *diststep, int *distcells,
              int *nmax, FLOAT *xstart, FLOAT *ystart, FLOAT *zstart,
 		       int *ibuff,
              FLOAT *xp, FLOAT *yp, FLOAT *zp, float *up, float *vp, float *wp,
@@ -198,6 +199,7 @@ extern "C" void FORTRAN_NAME(star_feedback3)(int *nx, int *ny, int *nz,
 		       float *dt, float *r, float *dx, FLOAT *t, float *z,
              float *d1, float *x1, float *v1, float *t1,
                        float *sn_param, float *m_eject, float *yield,
+	     int *distrad, int *diststep, int *distcells,
              int *nmax, FLOAT *xstart, FLOAT *ystart, FLOAT *zstart,
 		       int *ibuff,
              FLOAT *xp, FLOAT *yp, FLOAT *zp, float *up, float *vp, float *wp,
@@ -329,12 +331,8 @@ extern "C" void FORTRAN_NAME(copy3d)(float *source, float *dest,
 	      float *justburn, float *EmissivityArray, float dtLevelAbove);
 #endif 
  
-int grid::StarParticleHandler(HierarchyEntry* SubgridPointer, int level
-// pass in dtLevelAbove for calculation of Geoffrey's Emissivity0 baryon field 
-#ifdef EMISSIVITY
-			     , float dtLevelAbove
-#endif
-                             )
+int grid::StarParticleHandler(HierarchyEntry* SubgridPointer, int level,
+			     float dtLevelAbove)
 {
 
   if (!StarParticleCreation && !StarParticleFeedback)
@@ -1141,7 +1139,8 @@ int grid::StarParticleHandler(HierarchyEntry* SubgridPointer, int level
           &Time, &zred,
        &DensityUnits, &LengthUnits, &VelocityUnits, &TimeUnits,
           &StarEnergyToThermalFeedback, &StarMassEjectionFraction,
-          &StarMetalYield,
+          &StarMetalYield, &StarFeedbackDistRadius, &StarFeedbackDistCellStep, 
+       &StarFeedbackDistTotalCells,
        &NumberOfParticles,
           CellLeftEdge[0], CellLeftEdge[1], CellLeftEdge[2], &GhostZones,
        ParticlePosition[0], ParticlePosition[1],
@@ -1168,7 +1167,8 @@ int grid::StarParticleHandler(HierarchyEntry* SubgridPointer, int level
           &Time, &zred,
        &DensityUnits, &LengthUnits, &VelocityUnits, &TimeUnits,
           &StarEnergyToThermalFeedback, &StarMassEjectionFraction,
-          &StarMetalYield,
+          &StarMetalYield, &StarFeedbackDistRadius, &StarFeedbackDistCellStep, 
+       &StarFeedbackDistTotalCells,
        &NumberOfParticles,
           CellLeftEdge[0], CellLeftEdge[1], CellLeftEdge[2], &GhostZones,
        ParticlePosition[0], ParticlePosition[1],

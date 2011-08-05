@@ -89,7 +89,7 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   MetaData.CycleSkipRestartDump = 0;
   MetaData.CycleLastDataDump    = INT_UNDEFINED;
   MetaData.CycleSkipDataDump    = 0;
-  MetaData.SubcycleLastDataDump    = INT_UNDEFINED;
+  MetaData.SubcycleLastDataDump    = 0;
   MetaData.SubcycleSkipDataDump    = 0;
   MetaData.CycleLastHistoryDump = INT_UNDEFINED;
   MetaData.CycleSkipHistoryDump = 0;
@@ -98,6 +98,9 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   MetaData.OutputFirstTimeAtLevel = 0; // zero is off
   MetaData.StopFirstTimeAtLevel   = 0; // zero is off
  
+  MetaData.NumberOfOutputsBeforeExit = 0;
+  MetaData.OutputsLeftBeforeExit     = 0;
+
   MetaData.RestartDumpNumber   = 0;            // starting restart id number
   MetaData.RestartDumpName     = DefaultRestartName;
   MetaData.RestartDumpDir      = DefaultRestartDir;
@@ -193,7 +196,7 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   MinimumEfficiency         = 0.2;               // between 0-1, usually ~0.1
   MinimumSubgridEdge        = 6;                 // min for acceptable subgrid
   MaximumSubgridSize        = 32768;             // max for acceptable subgrid
-  SubgridSizeAutoAdjust     = FALSE; // true for adjusting maxsize and minedge
+  SubgridSizeAutoAdjust     = TRUE; // true for adjusting maxsize and minedge
   OptimalSubgridsPerProcessor = 16;    // Subgrids per processor
   NumberOfBufferZones       = 1;
  
@@ -222,8 +225,14 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
     MustRefineRegionRightEdge[dim] = 1.0;
   }
  
-  for (i = 0; i < MAX_STATIC_REGIONS; i++)
+  for (i = 0; i < MAX_STATIC_REGIONS; i++) {
     StaticRefineRegionLevel[i] = INT_UNDEFINED;
+    AvoidRefineRegionLevel[i]  = INT_UNDEFINED;
+    for (dim = 0; dim < MAX_DIMENSION; dim++) {
+      AvoidRefineRegionLeftEdge[i][dim] = FLOAT_UNDEFINED;
+      AvoidRefineRegionRightEdge[i][dim] = FLOAT_UNDEFINED;
+    }
+  }
 
   /* For evolving refinement regions. */
   RefineRegionFile = NULL;
@@ -236,6 +245,8 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
     }
   }
 
+  DatabaseLocation = NULL;
+
  
   ParallelRootGridIO          = FALSE;
   ParallelParticleIO          = FALSE;
@@ -243,7 +254,6 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   UnigridTranspose            = FALSE;
   NumberOfRootGridTilesPerDimensionPerProcessor = 1;
   PartitionNestedGrids        = FALSE;
-  StaticPartitionNestedGrids  = TRUE;
   ExtractFieldsOnly           = TRUE;
 
   ExternalBoundaryIO          = FALSE;
@@ -325,11 +335,11 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   GloverChemistryModel        = 0;                 // 0ff
   GloverRadiationBackground   = 0;
   GloverOpticalDepth          = 0;
-  CRModel                     = 0;                 // off
-  ShockMethod                 = 0;                 // temperature unsplit
+  ShockMethod                 = 0;                 // off
   ShockTemperatureFloor       = 1.0;               // Set to 1K
   StorePreShockFields         = 0;
   RadiationFieldType          = 0;
+  RadiationFieldRedshift      = 0.0;
   TabulatedLWBackground       = 0;
   RadiationFieldLevelRecompute = 0;
   RadiationData.RadiationShield = 0;
@@ -337,6 +347,7 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   SetUVBAmplitude             = 1.0;
   SetHeIIHeatingScale         = 1.8;
   PhotoelectricHeating	      = 0;
+  PhotoelectricHeatingRate    = 8.5e-26;           // ergs cm-3 s-1
   RadiationXRaySecondaryIon   = 0;
   RadiationXRayComptonHeating = 0;
 
@@ -411,14 +422,18 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   StarEnergyToThermalFeedback      = 1.0e-5;
   StarEnergyToStellarUV            = 3.0e-6;
   StarEnergyToQuasarUV             = 5.0e-6;
+  StarFeedbackDistRadius           = 0;
+  StarFeedbackDistCellStep         = 0;
+  StarFeedbackDistTotalCells       = 1;
   MultiMetals                      = FALSE;
   NumberOfParticleAttributes       = INT_UNDEFINED;
   ParticleTypeInFile               = TRUE;
   OutputParticleTypeGrouping       = FALSE;
 
-  Conduction = FALSE;
+  IsotropicConduction = FALSE;
   AnisotropicConduction = FALSE;
-  ConductionSpitzerFraction = 1.0;
+  IsotropicConductionSpitzerFraction = 1.0;
+  AnisotropicConductionSpitzerFraction = 1.0;
   ConductionCourantSafetyNumber = 0.5;
 
   PythonTopGridSkip                = 0;
@@ -470,7 +485,7 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   PopIIIColorMass                  = 1e6;          // total mass to color
   IMFData                          = NULL;
 
-  MBHAccretion                     = FALSE;        // 1: Bondi rate, 2: fix temperature, 3: fix rate
+  MBHAccretion                     = FALSE;        // 1: Bondi rate, 2: fix temperature, 3: fix rate, 4: Bondi with v_rel=0, 5: Bondi with v_rel=0 and vorticity
   MBHAccretionRadius               = 50;           // pc
   MBHAccretingMassRatio            = 1.0;          // 100%, check Star_CalculateMassAccretion.C
   MBHAccretionFixedTemperature     = 3e5;          // K,       for MBHAccretion = 2
@@ -480,7 +495,7 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   MBHMinDynamicalTime              = 10e6;         // in years
   MBHMinimumMass                   = 1e3;          // Msun
 
-  MBHFeedback                      = FALSE;        // 1: isotropic thermal, 2: jet along z, 3: jet along L
+  MBHFeedback                      = FALSE;        // 1: isotropic thermal, 2: jet along z, 3: jet along L, 4: jet along L with 10deg noise, 5: jet along random direction
   MBHFeedbackRadiativeEfficiency   = 0.1;          // Shakura & Sunyaev (1973)
   MBHFeedbackEnergyCoupling        = 0.05;         // Springel (2005), Di Matteo (2005)
   MBHFeedbackMassEjectionFraction  = 0.1;          // 10%, check Star_CalculateFeedbackParameters.C
@@ -533,7 +548,7 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   SmallT		     = 1e-10;
   MaximumAlvenSpeed	     = 1e30;
   RiemannSolver		     = INT_UNDEFINED;
-  RiemannSolverFallback      = FALSE;
+  RiemannSolverFallback      = 1;
   ReconstructionMethod	     = INT_UNDEFINED;
   PositiveReconstruction     = FALSE;
   ConservativeReconstruction = 0;
@@ -732,6 +747,10 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
 
   VelAnyl                     = 0;
   BAnyl                     = 0;
+
+  /* Gas drag parameters */
+  UseGasDrag = 0;
+  GasDragCoefficient = 0.;
 
   return SUCCESS;
 }
