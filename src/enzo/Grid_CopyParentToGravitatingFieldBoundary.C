@@ -79,7 +79,7 @@ int grid::CopyParentToGravitatingFieldBoundary(grid *ParentGrid)
  
   for (dim = 0; dim < GridRank; dim++) {
     SubGridExtra[dim] = nint((GridLeftEdge[dim] -
-    			      GravitatingMassFieldLeftEdge[dim])
+			      GravitatingMassFieldLeftEdge[dim])
     			     /GravitatingMassFieldCellSize);
     // SubGridExtra[dim] = nint((CellLeftEdge[dim][0] -
     //  			      GravitatingMassFieldLeftEdge[dim])
